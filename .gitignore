@@ -1,0 +1,46 @@
+# ---------------------------------------------------------------
+# Artefacts générés par LaTeX (à ne pas versionner)
+# ---------------------------------------------------------------
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.glg
+*.glo
+*.gls
+*.glsdefs
+*.idx
+*.ilg
+*.ind
+*.ist
+*.lof
+*.log
+*.lol
+*.loa
+*.lot
+*.nav
+*.nlo
+*.nls
+*.out
+*.run.xml
+*.snm
+*.synctex.gz
+*.synctex(busy)
+*.toc
+*.vrb
+*.xdy
+*.tdo
+*.acn
+*.acr
+*.alg
+*.mw
+
+# Fichiers temporaires du système
+.DS_Store
+Thumbs.db
+*~
+
+# Le PDF final peut être versionné volontairement au moment du dépôt :
+# ne pas l'ignorer par défaut.
