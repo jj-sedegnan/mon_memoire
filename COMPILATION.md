@@ -1,5 +1,27 @@
 # Guide de compilation du mémoire
 
+## Démarrage rapide (3 minutes)
+
+**Sur Overleaf (recommandé) :**
+1. Télécharger le dépôt en ZIP puis *New Project → Upload Project*.
+2. Dans *Menu → Compiler*, choisir **XeLaTeX**.
+3. Cliquer sur Recompile (deux fois si besoin pour références et glossaire).
+4. Télécharger le PDF ; vérifier qu'aucun marqueur rouge n'y apparaît.
+
+**Sur son ordinateur (une fois TeX Live complet ou MiKTeX installé) :**
+
+```bash
+latexmk -xelatex -interaction=nonstopmode main.tex
+```
+
+Pour valider le PDF, trois contrôles sont obligatoires : zéro marqueur rouge
+(`grep -rn 'acompleter\|amesurer' --include='*.tex' .` ne doit renvoyer que la
+définition des commandes dans `main.tex`), aucune erreur `Undefined` dans le
+journal de compilation, et contrôle visuel de la page de garde, du sommaire, de
+la bibliographie et des annexes.
+
+---
+
 ## Pourquoi ce guide
 
 Le bac à sable de rédaction ne dispose d'aucune distribution LaTeX ni d'un accès
