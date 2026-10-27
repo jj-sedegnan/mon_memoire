@@ -59,20 +59,84 @@ Un jeu de règles complet génère des alertes sur du trafic légitime. Une pér
 \preuves{nombre d'alertes sur trafic normal avant et après réglage ; liste des règles désactivées ou restreintes, avec justification.}
 
 \section{Règles de détection personnalisées}
+Des règles locales complètent le jeu ET Open pour le contexte hospitalier. Les cinq propositions ci-dessous couvrent les flux DICOM et HL7, un accès SMB, la force brute sur SSH et le balayage de ports. Elles ne sont pas présentées comme opérationnelles : leur syntaxe doit d'abord passer le test de configuration, puis chaque règle doit être déclenchée par le scénario correspondant avant toute validation. Le numéro de version (\texttt{rev}) est porté à 2 pour distinguer cette version révisée de la version initiale.
 
-Des règles locales complètent ET Open pour le contexte hospitalier. Les exemples suivants couvrent les flux DICOM et HL7, un accès SMB, la force brute sur SSH et le balayage de ports. Ce sont des propositions, à tester et à adapter avant d'être présentées comme validées ; les variables sont définies dans la configuration de Suricata.
+\subsection{Variables d'adresses requises}
+
+Les règles référencent des groupes d'adresses qui doivent exister dans la configuration de Suricata (sur OPNsense, dans les variables du module IDS) ; une variable non déclarée provoque l'échec du chargement des règles. Le tableau~\ref{tab:variables} propose les valeurs correspondant au plan d'adressage du laboratoire (tableau~\ref{tab:vlan}) ; les groupes fins (\texttt{SERVEURS\_IMAGERIE}, \texttt{SERVEURS\_SIH}) seront restreints aux adresses réelles des serveurs concernés lorsque celles-ci seront configurées.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{llX}
+\hline
+\textbf{Variable} & \textbf{Rôle} & \textbf{Valeur proposée (laboratoire)} \\
+\hline
+\texttt{HOME\_NET} & ensemble des réseaux surveillés & 10.10.10.0/24 à 10.10.50.0/24 \\
+\texttt{SERVEURS} & VLAN 40 (serveurs) & 10.10.40.0/24 \\
+\texttt{SERVEURS\_IMAGERIE} & serveurs DICOM & sous-ensemble de \texttt{SERVEURS}, à préciser \\
+\texttt{SERVEURS\_SIH} & serveurs applicatifs HL7 & sous-ensemble de \texttt{SERVEURS}, à préciser \\
+\texttt{ZONE\_SOINS} & VLAN 20 & 10.10.20.0/24 \\
+\texttt{ZONE\_SOINS\_BIOMED} & VLAN 20 et 30 & 10.10.20.0/24, 10.10.30.0/24 \\
+\hline
+\end{tabularx}
+\caption{Groupes d'adresses utilisés par les règles locales (proposition)}
+\label{tab:variables}
+\end{table}
+
+\subsection{Contenu des règles}
 
 \begin{lstlisting}[language={},breaklines=true,basicstyle=\ttfamily\scriptsize]
-alert tcp !$ZONE_SOINS_BIOMED any -> $SERVEURS_IMAGERIE 104 (msg:"CNHU DICOM depuis zone non autorisee"; flow:to_server; sid:1000001; rev:1;)
-alert tcp any any -> $SERVEURS 445 (msg:"CNHU SMB vers serveurs depuis zone non autorisee"; flow:to_server; sid:1000002; rev:1;)
-alert tcp !$ZONE_SOINS any -> $SERVEURS_SIH 2575 (msg:"CNHU HL7 depuis zone non autorisee"; flow:to_server; sid:1000003; rev:1;)
-alert tcp any any -> $SERVEURS 22 (msg:"CNHU SSH tentatives repetees"; flags:S; threshold:type both, track by_src, count 5, seconds 60; sid:1000004; rev:1;)
-alert tcp any any -> $HOME_NET any (msg:"CNHU balayage de ports"; flags:S; threshold:type both, track by_src, count 20, seconds 5; sid:1000005; rev:1;)
+# R1 - trafic DICOM (104) vers l'imagerie depuis une zone non autorisee
+alert tcp !$ZONE_SOINS_BIOMED any -> $SERVEURS_IMAGERIE 104 (msg:"CNHU DICOM depuis zone non autorisee"; flow:to_server; classtype:policy-violation; sid:1000001; rev:2;)
+# R2 - acces SMB (445) vers les serveurs
+alert tcp any any -> $SERVEURS 445 (msg:"CNHU SMB vers serveurs"; flow:to_server; classtype:policy-violation; sid:1000002; rev:2;)
+# R3 - trafic HL7/MLLP (2575) vers le SIH depuis une zone non autorisee
+alert tcp !$ZONE_SOINS any -> $SERVEURS_SIH 2575 (msg:"CNHU HL7 depuis zone non autorisee"; flow:to_server; classtype:policy-violation; sid:1000003; rev:2;)
+# R4 - force brute SSH : 5 SYN d'une meme source en 60 s
+alert tcp any any -> $SERVEURS 22 (msg:"CNHU SSH tentatives repetees"; flow:to_server; flags:S; classtype:attempted-admin; detection_filter:track by_src, count 5, seconds 60; sid:1000004; rev:2;)
+# R5 - balayage : 20 SYN d'une meme source en 5 s
+alert tcp any any -> $HOME_NET any (msg:"CNHU balayage de ports"; flags:S; classtype:attempted-recon; detection_filter:track by_src, count 20, seconds 5; sid:1000005; rev:2;)
 \end{lstlisting}
 
-Pour chaque règle, le mémoire présente son contenu, l'objectif de détection visé et le résultat du test qui la déclenche.
+Les trois premières règles sont des règles de politique (\texttt{policy-violation}) : elles sanctionnent un flux interdit par la matrice de flux du tableau~\ref{tab:flux}, et leur pertinence dépend entièrement de l'exactitude des variables d'adresses. Les règles R4 et R5 utilisent le mot-clé \texttt{detection\_filter}. Le mot-clé historique \texttt{threshold}, hérité de Snort, reste accepté par Suricata~8 mais y est officiellement remplacé, au niveau de la règle, par \texttt{detection\_filter}, qui n'émet aucune alerte avant le $N$-ième événement puis alerte à chaque nouvel événement\cite{suricatadoc}. Le blocage temporaire après dépassement d'un seuil relève quant à lui de \texttt{rate\_filter}, configuré dans le fichier de filtres global et non dans la règle elle-même.
 
-\preuves{extrait des règles locales effectivement chargées ; pour chaque règle, l'alerte générée par le scénario correspondant (extrait de \texttt{eve.json} ou capture).}
+Ces règles appellent trois limites explicites. Premièrement, R5 compte des segments SYN successifs d'une même source et non des ports de destination distincts : un hôte légitime très connectif peut donc le déclencher, et les règles de balayage du jeu ET Open restent nécessaires en complément. Deuxièmement, R2 peut générer des faux positifs liés aux partages de fichiers ou à l'annuaire Active Directory ; elle ne doit passer en action \texttt{drop} qu'après la période d'observation en IDS. Troisièmement, R1 et R3 n'inspectent pas de flux chiffré : un échange DICOM ou HL7 sur TLS ne serait pas déchiffré par la sonde.
+
+\subsection{Couverture des scénarios de test}
+
+Le tableau~\ref{tab:couverture} met en regard chaque règle et les scénarios du tableau~\ref{tab:scenarios}. Il fait apparaître deux lacunes à assumer : la règle HL7 (R3) ne dispose d'aucun scénario de test dédié, et les scénarios S4 (empoisonnement ARP) et S6 (RDP depuis la zone Invités) ne sont couverts par aucune règle locale ; leur détection ne peut reposer que sur le jeu ET Open ou sur le filtrage du pare-feu, ce qui devra être constaté dans les résultats, non supposé.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{cllX}
+\hline
+\textbf{Règle} & \textbf{SID} & \textbf{Scénario} & \textbf{État} \\
+\hline
+R1 & 1000001 & S7 (DICOM hors zone) & proposition, non testée \\
+R2 & 1000002 & S5 (SMB hors zone) & proposition, non testée \\
+R3 & 1000003 & aucun scénario dédié & proposition, non testée, lacune de couverture \\
+R4 & 1000004 & S3 (force brute SSH) & proposition, non testée \\
+R5 & 1000005 & S1 et S2 (balayages) & proposition, non testée \\
+-- & -- & S4, S6 & pas de règle locale ; ET Open et pare-feu seulement \\
+\hline
+\end{tabularx}
+\caption{Correspondance entre règles locales et scénarios de test}
+\label{tab:couverture}
+\end{table}
+
+\subsection{Commandes de contrôle et preuves attendues}
+
+Les commandes ci-dessous servent à vérifier la syntaxe et le chargement effectif des règles ; elles ne présument pas de leur déclenchement, qui doit être démontré séparément.
+\begin{itemize}
+\item \texttt{suricata --build-info} : confirme la version installée (la cible est Suricata~8.0.7) et les options de compilation ;
+\item \texttt{suricata -T -c /usr/local/etc/suricata/suricata.yaml} : test de configuration. Le résultat attendu est un code retour nul et un message de validation ; une variable manquante ou une erreur de syntaxe fait échouer le test ;
+\item \texttt{grep -E '100000[1-5]' /usr/local/etc/suricata/rules/local.rules} : vérifie la présence des cinq règles dans le fichier chargé, à confirmer par les lignes de chargement du journal de démarrage ;
+\item rejeu hors production d'une capture : \texttt{suricata -r scenario.pcap -l /tmp/suri-test/}, puis interrogation du journal avec \texttt{jq} sur les événements \texttt{alert} de \texttt{eve.json} ( champs \texttt{alert.signature}, \texttt{alert.signature\_id} et \texttt{timestamp} ). Le résultat attendu est une alerte portant le SID de la règle visée, horodatée pendant l'exécution du scénario.
+\end{itemize}
+
+\preuves{résultat de \texttt{suricata -T} (code retour et sortie complète) ; extrait des règles locales effectivement chargées avec leurs SID ; pour chaque scénario joué, la commande lancée et l'alerte correspondante extraite de \texttt{eve.json} avec son horodatage ; pour les lacunes S4 et S6, la preuve qu'aucune alerte n'a été émise ou l'identification de la règle ET Open qui s'est déclenchée.}
 
 \section{Passage en mode IPS}
 
