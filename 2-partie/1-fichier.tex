@@ -197,7 +197,7 @@ Le système inspecte le trafic qui circule entre des zones fonctionnelles. À pa
 
 \subsection{Positionnement de la sonde}
 
-Suricata est installé sur le pare-feu OPNsense, par lequel transitent tous les flux entre zones et vers l'extérieur (figure~\ref{fig:cible}). Il inspecte ainsi les flux inter-zones, les plus révélateurs d'une propagation latérale, ainsi que le trafic entrant et sortant.
+Dans l'architecture cible, Suricata est placé sur le pare-feu OPNsense, par lequel transitent tous les flux entre zones et vers l'extérieur (figure~\ref{fig:cible}). Il inspecte ainsi les flux inter-zones, les plus révélateurs d'une propagation latérale, ainsi que le trafic entrant et sortant.
 
 Sur le réseau réel, le schéma de l'architecture fait ressortir deux emplacements possibles. Le premier est un port miroir du switch fédérateur, qui alimente une sonde passive : il ne perturbe pas le trafic et convient à la phase IDS. Le second est l'insertion de la sonde en coupure entre le routeur et le switch fédérateur : il permet le blocage, mais fait de la sonde un point de défaillance et impose un mécanisme de contournement ou une redondance. Le laboratoire reproduit le second cas, car il permet de tester l'IDS comme l'IPS.
 

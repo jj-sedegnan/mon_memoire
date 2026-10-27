@@ -1,7 +1,7 @@
 \addcontentsline{toc}{section}{Introduction}
 \section*{Introduction}
 
-Ce chapitre décrit le déploiement de Suricata sur la plateforme OPNsense dans un environnement virtualisé, la rédaction de règles adaptées au contexte hospitalier, puis l'évaluation du système par des scénarios d'attaque rejoués avant et après sa mise en œuvre. Conformément à la règle suivie tout au long de ce travail, aucun résultat n'est présenté tant qu'il n'a pas été mesuré : les passages marqués en rouge sont à compléter avec les résultats réels, et chaque section indique les preuves à produire.
+Ce chapitre décrit le déploiement de Suricata sur la plateforme OPNsense dans un environnement virtualisé, la rédaction de règles adaptées au contexte hospitalier, puis l'évaluation du système par des scénarios d'attaque rejoués avant et après sa mise en œuvre. Les étapes de déploiement présentées constituent la procédure cible : elles ne valent pas constat d'exécution, laquelle doit être établie par les preuves listées dans chaque section. Conformément à la règle suivie tout au long de ce travail, aucun résultat n'est présenté tant qu'il n'a pas été mesuré : les passages marqués en rouge sont à compléter avec les résultats réels, et chaque section indique les preuves à produire.
 
 \section{Environnement de virtualisation}
 
@@ -40,7 +40,7 @@ Travailler sur un environnement virtualisé constitue une limite assumée : les 
 
 \section{Plateforme : zones et pare-feu}
 
-Les cinq zones du tableau~\ref{tab:vlan} sont créées sur le commutateur virtuel et rattachées chacune à une interface ou sous-interface d'OPNsense. OPNsense \acompleter{version} est installé depuis l'image ISO, avec un partitionnement ZFS \acompleter{mode retenu}. Le pare-feu applique le refus par défaut ; seuls les flux du tableau~\ref{tab:flux} transitent entre zones. Le durcissement des commutateurs (limitation des adresses MAC par port, DHCP snooping, \emph{Dynamic ARP Inspection}) n'est applicable que si le commutateur virtuel le permet \acompleter{indiquer ce qui a été effectivement activé}. Cette plateforme est identique dans tous les états d'évaluation : elle donne à la sonde de la visibilité sur les flux inter-zones.
+Les cinq zones du tableau~\ref{tab:vlan} sont à créer sur le commutateur virtuel et à rattacher chacune à une interface ou sous-interface d'OPNsense. OPNsense \acompleter{version} s'installe depuis l'image ISO, avec un partitionnement ZFS \acompleter{mode retenu}. Le pare-feu applique le refus par défaut ; seuls les flux du tableau~\ref{tab:flux} doivent transiter entre zones. Le durcissement des commutateurs (limitation des adresses MAC par port, DHCP snooping, \emph{Dynamic ARP Inspection}) n'est applicable que si le commutateur virtuel le permet \acompleter{indiquer ce qui a été effectivement activé}. Cette plateforme est identique dans tous les états d'évaluation : elle donne à la sonde de la visibilité sur les flux inter-zones.
 
 \preuves{interfaces OPNsense avec chaque VLAN ; export des règles de pare-feu par zone ; pour un flux autorisé et un flux interdit, capture du test et ligne de journal correspondante ; résultat de \texttt{ping} et \texttt{traceroute} entre deux VLAN.}
 
@@ -48,7 +48,7 @@ Les cinq zones du tableau~\ref{tab:vlan} sont créées sur le commutateur virtue
 
 \subsection{Installation et configuration}
 
-Suricata est activé sur les interfaces à surveiller d'OPNsense, avec le jeu de règles ET Open téléchargé et activé, d'abord en mode IDS (journalisation seule)\cite{opnsensedoc,suricatadoc}. Les variables d'adresses, en particulier le réseau protégé et les groupes de serveurs, sont définies selon le plan d'adressage du tableau~\ref{tab:vlan}, car de leur exactitude dépend la pertinence des règles. Le journal \texttt{eve.json} est activé.
+Suricata doit être activé sur les interfaces à surveiller d'OPNsense, avec le jeu de règles ET Open téléchargé et activé, d'abord en mode IDS (journalisation seule)\cite{opnsensedoc,suricatadoc}. Les variables d'adresses, en particulier le réseau protégé et les groupes de serveurs, sont à définir selon le plan d'adressage du tableau~\ref{tab:vlan}, car de leur exactitude dépend la pertinence des règles. Le journal \texttt{eve.json} doit être activé.
 
 \preuves{activation de Suricata et interfaces surveillées ; jeu de règles ET Open chargé ; variables d'adresses ; capture d'un premier événement dans \texttt{eve.json}.}
 
@@ -146,7 +146,7 @@ Le mode IPS place Suricata en coupure sur le flux. Il repose sur la compatibilit
 
 \section{Visualisation des alertes avec Wazuh}
 
-Wazuh est déployé en configuration tout-en-un pour centraliser et visualiser les alertes de Suricata\cite{wazuhdoc}. Les journaux d'OPNsense et les événements Suricata lui sont transmis selon la méthode retenue (agent sur OPNsense ou syslog). Une règle de corrélation peut élever le niveau d'une alerte donnée, et une réponse active peut bloquer temporairement l'adresse source après des échecs d'authentification répétés. Ce volet est complémentaire : l'évaluation porte sur Suricata.
+Wazuh est retenu en configuration tout-en-un pour centraliser et visualiser les alertes de Suricata\cite{wazuhdoc}. Les journaux d'OPNsense et les événements Suricata lui sont transmis selon la méthode retenue (agent sur OPNsense ou syslog). Une règle de corrélation peut élever le niveau d'une alerte donnée, et une réponse active peut bloquer temporairement l'adresse source après des échecs d'authentification répétés. Ce volet est complémentaire : l'évaluation porte sur Suricata.
 
 \preuves{tableau de bord Wazuh accessible ; alerte Suricata visible dans le tableau de bord ; blocage automatique déclenché, si mis en œuvre.}
 
