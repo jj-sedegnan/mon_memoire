@@ -1,0 +1,169 @@
+\addcontentsline{toc}{section}{Introduction}
+\section*{Introduction}
+
+Ce chapitre décrit le déploiement de Suricata sur la plateforme OPNsense dans un environnement virtualisé, la rédaction de règles adaptées au contexte hospitalier, puis l'évaluation du système par des scénarios d'attaque rejoués avant et après sa mise en œuvre. Conformément à la règle suivie tout au long de ce travail, aucun résultat n'est présenté tant qu'il n'a pas été mesuré : les passages marqués en rouge sont à compléter avec les résultats réels, et chaque section indique les preuves à produire.
+
+\section{Environnement de virtualisation}
+
+\subsection{Hyperviseur et ressources}
+
+L'ensemble des manipulations est réalisé dans un environnement de test distinct du réseau de production, afin d'éviter tout risque d'interruption de service. L'hyperviseur retenu est KVM, piloté par libvirt, sur un hôte Ubuntu Server \acompleter{version}, avec \acompleter{X} Go de RAM et \acompleter{X} cœurs. La topologie est administrée via \acompleter{GNS3 ou EVE-NG}. Le tableau~\ref{tab:vms} liste les machines du laboratoire.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+\textbf{Machine virtuelle} & \textbf{Rôle} & \textbf{Ressources} \\
+\hline
+OPNsense & pare-feu et sonde Suricata & \acompleter{vCPU / RAM} \\
+Wazuh (tout-en-un) & visualisation des alertes & \acompleter{vCPU / RAM} \\
+Contrôleur Active Directory simulé & annuaire, DNS & \acompleter{vCPU / RAM} \\
+Poste Windows 10 & poste utilisateur & \acompleter{vCPU / RAM} \\
+Serveur Linux & serveur applicatif, cible des tests & \acompleter{vCPU / RAM} \\
+Poste Kali & machine d'attaque (tests) & \acompleter{vCPU / RAM} \\
+\hline
+\end{tabularx}
+\caption{Machines virtuelles du laboratoire}
+\label{tab:vms}
+\end{table}
+
+\subsection{Installation et vérification}
+
+La virtualisation matérielle est vérifiée par la commande \texttt{egrep -c '(vmx|svm)' /proc/cpuinfo}, qui doit renvoyer une valeur non nulle ; les machines créées sont listées par \texttt{virsh list --all}. Un pont réseau relie l'hôte au réseau physique du laboratoire.
+
+\preuves{résultat de \texttt{egrep -c '(vmx|svm)' /proc/cpuinfo} ; capture de \texttt{virsh list --all} ; schéma de la topologie ; configuration du pont réseau de l'hôte.}
+
+\subsection{Limites méthodologiques}\label{sec:limites}
+
+Travailler sur un environnement virtualisé constitue une limite assumée : les mesures de performance sont relatives et non représentatives d'une charge réelle de production, le nombre de cœurs partagés entre toutes les machines peut affecter la précision des mesures de latence, et l'édition communautaire des outils peut différer d'une édition professionnelle. La comparaison avant/après reste néanmoins valide, car tous les états sont mesurés dans des conditions matérielles identiques.
+
+\section{Plateforme : zones et pare-feu}
+
+Les cinq zones du tableau~\ref{tab:vlan} sont créées sur le commutateur virtuel et rattachées chacune à une interface ou sous-interface d'OPNsense. OPNsense \acompleter{version} est installé depuis l'image ISO, avec un partitionnement ZFS \acompleter{mode retenu}. Le pare-feu applique le refus par défaut ; seuls les flux du tableau~\ref{tab:flux} transitent entre zones. Le durcissement des commutateurs (limitation des adresses MAC par port, DHCP snooping, \emph{Dynamic ARP Inspection}) n'est applicable que si le commutateur virtuel le permet \acompleter{indiquer ce qui a été effectivement activé}. Cette plateforme est identique dans tous les états d'évaluation : elle donne à la sonde de la visibilité sur les flux inter-zones.
+
+\preuves{interfaces OPNsense avec chaque VLAN ; export des règles de pare-feu par zone ; pour un flux autorisé et un flux interdit, capture du test et ligne de journal correspondante ; résultat de \texttt{ping} et \texttt{traceroute} entre deux VLAN.}
+
+\section{Déploiement de Suricata en mode IDS}
+
+\subsection{Installation et configuration}
+
+Suricata est activé sur les interfaces à surveiller d'OPNsense, avec le jeu de règles ET Open téléchargé et activé, d'abord en mode IDS (journalisation seule)\cite{opnsensedoc,suricatadoc}. Les variables d'adresses, en particulier le réseau protégé et les groupes de serveurs, sont définies selon le plan d'adressage du tableau~\ref{tab:vlan}, car de leur exactitude dépend la pertinence des règles. Le journal \texttt{eve.json} est activé.
+
+\preuves{activation de Suricata et interfaces surveillées ; jeu de règles ET Open chargé ; variables d'adresses ; capture d'un premier événement dans \texttt{eve.json}.}
+
+\subsection{Réglage et gestion des faux positifs}
+
+Un jeu de règles complet génère des alertes sur du trafic légitime. Une période d'observation en IDS, sur un trafic normal du laboratoire, permet d'identifier les règles bruyantes, puis de les désactiver, de les restreindre à certaines zones ou de supprimer les alertes pour des hôtes précis. Cette étape conditionne le passage en IPS : une règle qui déclenche des faux positifs ne doit pas bloquer.
+
+\preuves{nombre d'alertes sur trafic normal avant et après réglage ; liste des règles désactivées ou restreintes, avec justification.}
+
+\section{Règles de détection personnalisées}
+
+Des règles locales complètent ET Open pour le contexte hospitalier. Les exemples suivants couvrent les flux DICOM et HL7, un accès SMB, la force brute sur SSH et le balayage de ports. Ce sont des propositions, à tester et à adapter avant d'être présentées comme validées ; les variables sont définies dans la configuration de Suricata.
+
+\begin{lstlisting}[language={},breaklines=true,basicstyle=\ttfamily\scriptsize]
+alert tcp !$ZONE_SOINS_BIOMED any -> $SERVEURS_IMAGERIE 104 (msg:"CNHU DICOM depuis zone non autorisee"; flow:to_server; sid:1000001; rev:1;)
+alert tcp any any -> $SERVEURS 445 (msg:"CNHU SMB vers serveurs depuis zone non autorisee"; flow:to_server; sid:1000002; rev:1;)
+alert tcp !$ZONE_SOINS any -> $SERVEURS_SIH 2575 (msg:"CNHU HL7 depuis zone non autorisee"; flow:to_server; sid:1000003; rev:1;)
+alert tcp any any -> $SERVEURS 22 (msg:"CNHU SSH tentatives repetees"; flags:S; threshold:type both, track by_src, count 5, seconds 60; sid:1000004; rev:1;)
+alert tcp any any -> $HOME_NET any (msg:"CNHU balayage de ports"; flags:S; threshold:type both, track by_src, count 20, seconds 5; sid:1000005; rev:1;)
+\end{lstlisting}
+
+Pour chaque règle, le mémoire présente son contenu, l'objectif de détection visé et le résultat du test qui la déclenche.
+
+\preuves{extrait des règles locales effectivement chargées ; pour chaque règle, l'alerte générée par le scénario correspondant (extrait de \texttt{eve.json} ou capture).}
+
+\section{Passage en mode IPS}
+
+Le mode IPS place Suricata en coupure sur le flux. Il repose sur la compatibilité de la carte réseau virtuelle avec le mécanisme de capture utilisé, ce qui doit être vérifié sur l'environnement de test avant la bascule. Seules les règles à haute confiance, validées pendant la phase IDS, passent à l'action \texttt{drop}. La charge ajoutée par l'inspection en ligne est mesurée par la latence et le débit avant et après l'activation de l'IPS.
+
+\preuves{capture du blocage effectif d'une attaque en mode IPS, avec la ligne de journal ; mesure de latence ou de débit avant et après activation de l'IPS.}
+
+\section{Visualisation des alertes avec Wazuh}
+
+Wazuh est déployé en configuration tout-en-un pour centraliser et visualiser les alertes de Suricata\cite{wazuhdoc}. Les journaux d'OPNsense et les événements Suricata lui sont transmis selon la méthode retenue (agent sur OPNsense ou syslog). Une règle de corrélation peut élever le niveau d'une alerte donnée, et une réponse active peut bloquer temporairement l'adresse source après des échecs d'authentification répétés. Ce volet est complémentaire : l'évaluation porte sur Suricata.
+
+\preuves{tableau de bord Wazuh accessible ; alerte Suricata visible dans le tableau de bord ; blocage automatique déclenché, si mis en œuvre.}
+
+\section{Scénarios de test et protocole}
+
+Sept scénarios, rattachés au référentiel MITRE ATT\&CK\cite{attck}, sont proposés (tableau~\ref{tab:scenarios}). Ils couvrent la reconnaissance, l'accès initial et le mouvement latéral. Chacun est rejoué à l'identique dans les trois états, exclusivement dans le laboratoire.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{llXl}
+\hline
+\textbf{Réf.} & \textbf{Technique} & \textbf{Scénario} & \textbf{Outil} \\
+\hline
+S1 & T1018 & découverte des hôtes distants (balayage ping) & Nmap \\
+S2 & T1046 & découverte des services réseau & Nmap \\
+S3 & T1110 & force brute sur un service d'administration (SSH) & Hydra \\
+S4 & T1557.002 & empoisonnement de cache ARP & arpspoof \\
+S5 & T1021.002 & accès SMB depuis une zone non autorisée & smbclient \\
+S6 & T1021.001 & connexion RDP depuis la zone Invités & client RDP \\
+S7 & -- & accès DICOM depuis une zone non autorisée (flux métier interdit) & netcat \\
+\hline
+\end{tabularx}
+\caption{Scénarios d'attaque simulés}
+\label{tab:scenarios}
+\end{table}
+
+Trois états sont comparés, avec la même topologie et les mêmes règles de pare-feu : (A) l'état « avant », sans détection ; (B) Suricata en mode IDS ; (C) Suricata en mode IPS. Seul le fonctionnement de Suricata varie. Les indicateurs mesurés sont : attaque réussie ou non, alerte générée oui ou non, blocage oui ou non, délai de détection en secondes (horodatage de l'alerte moins horodatage du début du test), nombre de faux positifs et impact sur la latence. Le taux de détection est le nombre de scénarios détectés divisé par le nombre de scénarios joués ; le taux de blocage se calcule de la même façon.
+
+\section{Résultats de l'évaluation avant/après}
+
+Le tableau~\ref{tab:resultats} reste à renseigner avec les mesures réelles ; aucune valeur n'est à y inscrire avant les tests.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lccccc}
+\hline
+ & \textbf{(A) Avant} & \multicolumn{2}{c}{\textbf{(B) IDS}} & \multicolumn{2}{c}{\textbf{(C) IPS}} \\
+\textbf{Scénario} & Alerte & Alerte & Délai (s) & Alerte & Blocage \\
+\hline
+S1 & \amesurer & \amesurer & \amesurer & \amesurer & \amesurer \\
+S2 & \amesurer & \amesurer & \amesurer & \amesurer & \amesurer \\
+S3 & \amesurer & \amesurer & \amesurer & \amesurer & \amesurer \\
+S4 & \amesurer & \amesurer & \amesurer & \amesurer & \amesurer \\
+S5 & \amesurer & \amesurer & \amesurer & \amesurer & \amesurer \\
+S6 & \amesurer & \amesurer & \amesurer & \amesurer & \amesurer \\
+S7 & \amesurer & \amesurer & \amesurer & \amesurer & \amesurer \\
+\hline
+\end{tabular}
+\caption{Résultats de l'évaluation : sans détection, IDS et IPS}
+\label{tab:resultats}
+\end{table}
+
+\preuves{pour chaque scénario et chaque état : commande lancée, sortie, présence ou absence d'alerte ; pour les états IDS et IPS, capture de l'alerte avec son horodatage ; nombre de faux positifs relevés ; mesure de latence avec et sans IPS.}
+
+\subsection{Interprétation et limites}
+
+\acompleter{pour chaque indicateur, une ou deux phrases sur ce que le résultat démontre par rapport à l'objectif : détecter et bloquer les attaques en préservant la disponibilité}
+
+Les mesures de délai doivent être interprétées avec prudence : réalisées sur un environnement virtualisé aux cœurs partagés, elles ne reflètent pas nécessairement les performances de l'infrastructure de production du CNHU-HKM, dimensionnée différemment (voir la section~\ref{sec:limites}). Les résultats portent par ailleurs sur sept scénarios et sur la détection par signatures ; ils ne couvrent ni le trafic chiffré ni les menaces inédites.
+
+\section{Difficultés rencontrées}
+
+\acompleter{pour chaque difficulté du journal de bord : nature (message d'erreur exact), cause, solution retenue, temps perdu ; classer par composant (virtualisation, OPNsense, Suricata, Wazuh)}
+
+\section{Recommandations pour un déploiement au CNHU-HKM}
+
+\subsection{Préalables organisationnels}
+
+Avant toute intervention sur la production, il convient d'obtenir la validation de la direction, de définir une fenêtre de maintenance et d'informer les services concernés, en particulier le service biomédical, dont les équipements ne tolèrent pas toujours une coupure ni un changement d'adressage.
+
+\subsection{Déploiement progressif}
+
+Un déploiement par étapes est recommandé : d'abord une sonde Suricata en mode passif, alimentée par un port miroir, sans effet sur le trafic ; puis une période de réglage des faux positifs ; ensuite un service pilote avec Suricata en mode IDS sur le pare-feu ; enfin, seulement après examen des faux positifs, le passage de règles à haute confiance en mode IPS. Cette prudence découle de la criticité des services de soins. La segmentation du réseau et la supervision des alertes avec Wazuh viennent compléter le dispositif.
+
+\subsection{Moyens nécessaires}
+
+Les besoins en matériel et en temps sont \acompleter{à estimer avec le service, en restant réaliste par rapport aux ressources observées pendant le stage}. Côté compétences, l'unité a elle-même identifié le besoin de développer l'expertise interne en cybersécurité, par des formations certifiantes disponibles au Bénin et des partenariats avec l'agence nationale chargée de la sécurité des systèmes d'information\cite{kaho2026} ; une prise en main de Suricata et d'OPNsense par les administrateurs en est un préalable. Les mesures rejoignent les recommandations de l'APDP sur les accès, la sécurisation des réseaux et la sauvegarde\cite{apdp2024}.
+
+\addcontentsline{toc}{section}{Conclusion}
+\section*{Conclusion}
+
+Ce chapitre a décrit le déploiement de Suricata en modes IDS puis IPS sur OPNsense, les règles adaptées au contexte hospitalier, le protocole d'évaluation et les recommandations de déploiement. \acompleter{une phrase sur les résultats obtenus, à rédiger après les mesures}

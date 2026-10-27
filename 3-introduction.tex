@@ -1,0 +1,22 @@
+\introduction
+
+Le secteur de la santé connaît, depuis plusieurs années, une transformation numérique profonde : dossiers patients informatisés, imagerie médicale numérique, systèmes d'information hospitaliers interconnectés, équipements biomédicaux en réseau. Cette numérisation améliore la qualité et la rapidité de la prise en charge, mais elle expose également les établissements de santé à des risques informatiques dont les conséquences dépassent la seule perte de données : une interruption de service peut directement affecter la sécurité des patients. Les hôpitaux figurent aujourd'hui parmi les cibles privilégiées des cyberattaques, en particulier les attaques par rançongiciel, qui exploitent la criticité de leurs systèmes pour maximiser la pression sur les victimes.
+
+Le Centre National Hospitalier et Universitaire Hubert Koutoukou Maga (CNHU-HKM) de Cotonou, établissement de référence nationale\cite{decret2015}, n'échappe pas à cette réalité. Son système d'information repose sur une infrastructure réseau qui interconnecte des services aussi divers que l'administration, les unités de soins, le laboratoire, l'imagerie médicale et les équipements biomédicaux. Un audit préliminaire mené dans le cadre de ce stage a permis de constater que le segment analysé ne présente, à ce stade, aucune segmentation visible entre ces différents usages, et qu'aucun mécanisme de détection d'intrusion n'y a été identifié : une compromission d'un poste peut donc se propager et passer inaperçue.
+
+C'est dans ce contexte que s'inscrit le présent mémoire, réalisé à l'occasion d'un stage de \acompleter{durée du stage} au sein du service informatique et réseau du CNHU-HKM. Il traite de la mise en place d'un système de détection et de prévention d'intrusion (IDS/IPS) et propose de répondre à la problématique suivante :
+
+\monBloc{Comment mettre en place, au CNHU-HKM, un système de détection et de prévention d'intrusion capable de repérer et de bloquer les attaques visant le réseau, tout en garantissant la disponibilité des services critiques de soins ?}
+
+Pour y répondre, ce travail poursuit un objectif général, concevoir, déployer et valider dans un environnement de test représentatif un système IDS/IPS adapté au contexte hospitalier, décliné en cinq objectifs spécifiques :
+\begin{enumerate}
+\item réaliser un audit de l'existant permettant d'identifier les vulnérabilités du réseau actuel et le besoin de détection ;
+\item comparer les solutions IDS/IPS disponibles et concevoir l'architecture de détection retenue ;
+\item déployer Suricata, d'abord en mode détection (IDS) puis en mode prévention (IPS), sur la plateforme de pare-feu OPNsense ;
+\item rédiger des règles de détection adaptées au contexte hospitalier, notamment pour les flux DICOM et HL7 ;
+\item évaluer, par des scénarios d'attaque reproductibles, l'efficacité du système en comparant l'état du réseau avant et après sa mise en œuvre.
+\end{enumerate}
+
+L'intérêt de ce travail est double. Pour le CNHU-HKM, il fournit un état des lieux documenté, un système de détection testé et des recommandations concrètes de déploiement, directement exploitables par le service informatique. Pour l'auteur, il constitue une mise en application rigoureuse des compétences acquises en administration réseau et en sécurité des systèmes d'information, dans un contexte professionnel réel et à forts enjeux. La segmentation du réseau et la supervision des alertes sont traitées comme des éléments de contexte qui complètent le système, sans en être l'objet.
+
+La démarche adoptée associe une phase d'audit, une phase de conception, une phase de réalisation en environnement de test virtualisé et une phase d'évaluation expérimentale. Le mémoire s'organise en trois chapitres. Le chapitre~\ref{chap:1} présente le cadre d'étude, le CNHU-HKM, les enjeux de la cybersécurité hospitalière et l'état de l'art de la détection et de la prévention d'intrusion. Le chapitre~\ref{chap:2} détaille la méthodologie, présente les résultats de l'audit, compare les solutions IDS/IPS et expose la conception retenue. Le chapitre~\ref{chap:3} décrit le déploiement de Suricata, les règles personnalisées, les scénarios de test, les résultats de l'évaluation avant/après et les recommandations. Le mémoire se conclut par une synthèse des apports, des limites et des perspectives de ce travail.

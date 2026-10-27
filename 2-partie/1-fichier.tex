@@ -1,0 +1,244 @@
+\addcontentsline{toc}{section}{Introduction}
+\section*{Introduction}
+
+Ce chapitre décrit la démarche suivie, présente les résultats de l'audit du réseau existant du CNHU-HKM, compare les solutions IDS/IPS candidates, puis expose la conception du système de détection retenu. Les éléments de conception de la section~\ref{sec:conception} sont des propositions de travail, à valider avec le tuteur avant leur mise en œuvre.
+
+\section{Méthodologie}
+
+\subsection{Étapes du projet}
+
+Le projet s'est déroulé en cinq phases successives, étalées sur \acompleter{X} semaines : un audit du réseau existant, une phase de conception de l'architecture cible, une phase de réalisation en environnement de test virtualisé, une phase d'évaluation expérimentale par des scénarios d'attaque, et une phase de synthèse donnant lieu à des recommandations pour un déploiement progressif au CNHU-HKM. \acompleter{diagramme de Gantt simplifié ou tableau du calendrier effectivement suivi, à produire à partir du journal de bord}
+
+\subsection{Cadre éthique et autorisations}
+
+L'ensemble des manipulations présentées dans ce mémoire a été réalisé dans le respect d'un cadre formalisé avec le service informatique et réseau du CNHU-HKM. Une autorisation écrite du tuteur de stage a précisé le périmètre autorisé pour la consultation de la documentation réseau et pour les opérations de découverte (balayage d'hôtes et de ports), ainsi que l'engagement de ne réaliser aucun test d'intrusion actif sur le réseau de production sans accord préalable explicite. Conformément à cet engagement, aucune donnée patient n'a été consultée ni manipulée. Les informations sensibles relatives à l'infrastructure (adresses IP réelles, noms de machines) sont anonymisées lorsque leur divulgation n'apporte pas de valeur pédagogique. Cette autorisation figure en annexe~\ref{annexe1}.
+
+\section{Audit du réseau existant}
+
+\subsection{Méthode de découverte}
+
+L'audit a été mené à l'aide de l'outil Nmap (version 7.98), en deux temps. Une première phase de découverte d'hôtes actifs a été réalisée par requête ARP (\texttt{nmap -sn}), sans interrogation de services, sur le segment de données du service informatique. Une seconde phase a consisté en un balayage ciblé sur sept ports associés à des services web et de vidéosurveillance (80, 443, 554, 8000, 8080, 8899, 37777), avec détection de version des services (\texttt{nmap -sV}), afin d'identifier la nature des équipements exposant un service sur ces ports. Aucun test d'intrusion, de force brute ni de capture de trafic n'a été réalisé : seule la détection de services exposés a été effectuée, conformément au cadre défini plus haut.
+
+\subsection{Résultats de la découverte d'hôtes}
+
+Le balayage a identifié 85 hôtes actifs sur les 512 adresses de la plage 10.60.4.0/23 correspondant au réseau de données du service informatique, soit un taux d'occupation d'environ 17~\%. La répartition par constructeur d'interface réseau (adresse MAC) fait apparaître une majorité de postes Hewlett-Packard, accompagnés de quelques serveurs Windows, de téléphones IP Grandstream, d'imprimantes réseau Canon, et d'un nombre significatif d'adresses associées à des circuits intégrés Realtek, typiques de cartes réseau embarquées sur des équipements variés. \acompleter{tableau de synthèse : constructeur et nombre d'hôtes, à extraire de la sortie Nmap}
+
+Sur les sept ports testés, aucun service RTSP (port 554) n'a été détecté sur l'ensemble des hôtes actifs, ce qui n'indique pas de présence de caméras de vidéosurveillance IP exposant un flux vidéo direct sur ce segment particulier. Le tableau~\ref{tab:services} présente les services web identifiés.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{llp{5.5cm}}
+\hline
+\textbf{Adresse IP} & \textbf{Service identifié} & \textbf{Nature de l'équipement} \\
+\hline
+10.60.4.1 & Pare-feu / routeur (Cisco) & Passerelle réseau \\
+10.60.4.109 & Interface « GWN Project » (Grandstream) & Contrôleur de point d'accès Wi-Fi \\
+10.60.4.210 & IIS 10.0 / Windows & Serveur applicatif \\
+10.60.5.21 & Virata-EmWeb (HP) & Serveur web embarqué, probable imprimante ou onduleur \\
+10.60.5.100 & IIS 10.0 / Windows, erreur HTTP 403 & Équipement non identifié \\
+10.60.5.177 & Interface Canon confirmée & Imprimante réseau \\
+\hline
+\end{tabular}
+\caption{Services web identifiés sur le segment audité}
+\label{tab:services}
+\end{table}
+
+L'hôte 10.60.5.100 a fait l'objet d'une vérification complémentaire par simple interrogation HTTP, sans tentative de contournement de l'authentification. La réponse obtenue (erreur 403, page générique IIS protégée par authentification Windows) n'a pas permis de confirmer la nature exacte de l'équipement, malgré l'hypothèse initiale d'un enregistreur vidéo suggérée par le constructeur associé à son adresse MAC. Une identification complémentaire auprès du service informatique serait nécessaire.
+
+\subsection{Architecture physique du réseau}
+
+Le service a fourni un schéma de l'architecture du réseau du CNHU-HKM\cite{archi}, dont la date exacte reste à préciser. Il montre une topologie hiérarchique : un routeur Cisco relié à Internet, un switch fédérateur (Dell) qui sert de cœur, puis des liaisons en fibre optique vers des armoires de brassage et des switches d'accès répartis par service (urgences, soins, imagerie, laboratoire, banque de sang, administration, pharmacies, etc.). Les postes et des points d'accès Wi-Fi s'y raccordent, et un serveur applicatif est relié au cœur (figure~\ref{fig:existant}). Le schéma distingue par couleur les switches Cisco existants de ceux à remplacer, par un Cisco simple ou par un Cisco à port SFP ; la majorité des switches d'accès y est marquée à remplacer.
+
+\begin{figure}[htbp]
+\centering
+\small
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=2pt, align=center, minimum height=8mm, text width=3.4cm, font=\scriptsize},
+  node distance=7mm and 6mm]
+  \node[box] (net) {Internet};
+  \node[box, right=of net] (rtr) {Routeur Cisco};
+  \node[box, right=of rtr, fill=gray!25] (core) {Switch fédérateur (Dell)};
+  \node[box, below=14mm of rtr] (srv) {Serveur applicatif};
+  \node[box, below=14mm of core] (ex) {Armoires avec switches Cisco existants};
+  \node[box, right=of ex] (rem) {Switches d'accès à remplacer (services)};
+  \node[box, below=10mm of ex] (ap) {Points d'accès Wi-Fi};
+  \node[box, dashed, below=14mm of srv] (sonde) {Sonde IDS (port miroir)\\ \tiny emplacement proposé};
+  \draw (net) -- (rtr) -- (core);
+  \draw (core) -- node[left, font=\tiny]{FO} (srv);
+  \draw (core) -- node[left, font=\tiny]{FO} (ex);
+  \draw (core.south east) -- ++(0,-0.4) -| node[above, pos=0.2, font=\tiny]{FO} (rem);
+  \draw (ex) -- (ap);
+  \draw[dashed] (core.south west) -- ++(-0.9,-0.5) |- (sonde.east);
+\end{tikzpicture}
+\caption{Architecture physique simplifiée, redessinée d'après le schéma du service\cite{archi}. L'emplacement de la sonde est une proposition}
+\label{fig:existant}
+\end{figure}
+
+Quatre enseignements se dégagent pour ce travail.
+\begin{itemize}
+\item \textbf{Un point de convergence unique.} Le trafic entre services transite par le switch fédérateur et le routeur. C'est un emplacement d'observation idéal : un port miroir sur le fédérateur donne à une sonde passive la vue sur l'essentiel des flux, sans effet sur le trafic. C'est aussi un point de défaillance unique, ce qui pèse sur le choix d'un mode en coupure.
+\item \textbf{Aucun pare-feu, VLAN ni adressage n'apparaît sur le schéma.} Cela rejoint les constats de l'audit, mais reste à confirmer auprès du service : l'audit a identifié 10.60.4.1 comme un équipement Cisco de passerelle.
+\item \textbf{Un parc de switches hétérogène et en renouvellement.} Les capacités (port miroir, VLAN, contrôle ARP) dépendent du modèle, ce qui conditionne la faisabilité de la sonde et de la segmentation. \acompleter{modèle exact du switch fédérateur Dell et prise en charge du port miroir}
+\item \textbf{Une limite de visibilité.} Le trafic entre deux postes d'un même switch d'accès ne traverse pas le cœur et échappe à une sonde placée à cet endroit.
+\end{itemize}
+Le schéma est par ailleurs probablement antérieur à l'audit : il ne montre que deux points d'accès Wi-Fi, alors que l'audit a identifié un contrôleur Wi-Fi. Il doit donc être validé par le service avant d'être exploité comme référence.
+
+\subsection{Inventaire, flux et usages}
+
+\acompleter{inventaire détaillé par zone fonctionnelle, type d'équipement et criticité estimée, en croisant le scan avec la documentation interne et les échanges avec le personnel technique}
+
+\acompleter{flux métiers connus du service informatique (accès au SIH, à l'imagerie, à la messagerie), décrits à partir des échanges avec le personnel, même sans capture de trafic}
+
+\subsection{Constats}
+
+L'audit fait ressortir trois constats principaux. Premièrement, l'absence de segmentation visible sur le segment analysé : postes de travail, téléphonie IP, serveurs applicatifs et imprimantes partagent la même plage d'adressage /23, sans séparation par VLAN détectable depuis une position d'observation standard du réseau. Ce constat décrit l'état observé sur ce segment à la date de l'audit ; il ne préjuge pas de l'avancement des travaux de segmentation par VLAN que l'UGRIM mène par ailleurs\cite{kaho2026} \acompleter{faire préciser au tuteur leur périmètre et leur état, et ajuster ce constat}. Deuxièmement, l'absence de flux RTSP exposé sur ce segment, ce qui suggère soit l'absence de vidéosurveillance IP sur cette plage, soit son isolement sur un réseau distinct non couvert par ce balayage. Des installations de caméras de surveillance ayant été réalisées par l'unité durant l'été 2026\cite{kaho2026}, la seconde hypothèse est plausible ; elle reste à confirmer auprès du service compétent. Troisièmement, la présence d'un équipement non identifié (10.60.5.100), dont la fonction exacte n'a pas pu être déterminée par la seule observation du service web exposé.
+
+\section{Analyse de risques simplifiée}
+
+L'analyse s'inspire d'une version simplifiée de la méthode EBIOS Risk Manager : identification des biens essentiels, des scénarios redoutés, puis cotation de la vraisemblance et de la gravité sur une échelle de 1 (faible) à 4 (critique). Le tableau~\ref{tab:risques} présente les scénarios déduits des constats de l'audit. Les cotations sont une proposition de l'auteur, \acompleter{à valider avec le tuteur}.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{lXccc}
+\hline
+\textbf{Réf.} & \textbf{Scénario de risque} & \textbf{Vrais.} & \textbf{Gravité} & \textbf{Niveau} \\
+\hline
+R1 & Propagation d'un rançongiciel depuis un poste administratif vers les serveurs applicatifs, faute de segmentation & 3 & 4 & 12 \\
+R2 & Compromission d'un équipement biomédical ou d'un équipement non identifié, faute d'authentification robuste et d'isolement & 2 & 4 & 8 \\
+R3 & Intrusion non détectée, faute de supervision centralisée & 3 & 3 & 9 \\
+R4 & Accès d'un visiteur ou d'un équipement non maîtrisé au réseau interne & 2 & 3 & 6 \\
+\hline
+\end{tabularx}
+\caption{Scénarios de risque (niveau = vraisemblance $\times$ gravité)}
+\label{tab:risques}
+\end{table}
+
+La hiérarchisation place la propagation latérale (R1) en tête, suivie de l'absence de détection (R3). Un IDS/IPS répond directement à ces deux risques : il repère les comportements de propagation et comble l'absence de détection. Il justifie le choix du système étudié dans ce mémoire.
+
+\section{Étude comparative des solutions IDS/IPS}
+
+\subsection{Critères}
+
+Les solutions ont été comparées selon des critères issus des contraintes du contexte : coût de licence nul, prise en charge des modes IDS et IPS, qualité et disponibilité des règles de détection, intégration à la plateforme de pare-feu, format de journalisation exploitable, maturité et documentation, et charge de déploiement sur un laboratoire aux ressources limitées.
+
+\subsection{Moteurs de détection}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{lXXX}
+\hline
+\textbf{Critère} & \textbf{Suricata} & \textbf{Snort} & \textbf{Zeek} \\
+\hline
+Nature & moteur IDS/IPS à règles & moteur IDS/IPS à règles & analyseur de trafic et de comportements \\
+Modes IDS et IPS & oui\cite{suricatadoc} & oui & surtout analyse, pas conçu comme IPS \\
+Règles & ET Open et règles locales & règles communautaires et locales & scripts d'analyse \\
+Intégration à OPNsense & native\cite{opnsensedoc} & non native & non \\
+Journal structuré & \texttt{eve.json} & formats propres & journaux structurés \\
+\hline
+\end{tabularx}
+\caption{Comparaison des moteurs de détection (appréciations de l'auteur)}
+\label{tab:comparatif}
+\end{table}
+
+Suricata est retenu : il offre les modes IDS et IPS, un large jeu de règles ouvert, un journal structuré facile à exploiter et surtout une intégration native à OPNsense, ce qui limite la charge de déploiement. Zeek, plus orienté vers l'analyse du trafic, est un complément possible plutôt qu'un substitut.
+
+\subsection{Modes de déploiement}
+
+Deux modes de déploiement ont été envisagés. Le premier intègre Suricata au pare-feu OPNsense, qui devient à la fois point de filtrage et point d'inspection ; il est simple à mettre en œuvre et à administrer. Le second place une sonde dédiée, alimentée par un port miroir, qui ne perturbe jamais le trafic mais ne peut pas bloquer. Le premier est retenu pour ce travail, car il permet de passer de l'IDS à l'IPS sans changer d'architecture. Le second reste adapté à une phase d'observation sur le réseau de production.
+
+\subsection{Pare-feu et supervision}
+
+OPNsense est retenu comme plateforme hôte pour son caractère open source, son filtrage à état et son intégration de Suricata\cite{opnsensedoc}. Wazuh est retenu comme outil complémentaire de visualisation des alertes, pour ses agents, sa corrélation et sa réponse active dans un seul produit open source\cite{wazuhdoc}.
+
+\section{Conception du système de détection}\label{sec:conception}
+
+\subsection{Zones surveillées et plan d'adressage}
+
+Le système inspecte le trafic qui circule entre des zones fonctionnelles. À partir de la segmentation hospitalière décrite au chapitre~\ref{chap:1} et des constats de l'audit, cinq zones sont retenues, chacune portée par un VLAN. Le plan d'adressage ci-dessous est celui du laboratoire, distinct du plan de production (10.60.4.0/23). Le pare-feu en est la passerelle (adresse .1 de chaque réseau).
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{llll}
+\hline
+\textbf{VLAN} & \textbf{Zone} & \textbf{Réseau} & \textbf{Contenu type} \\
+\hline
+10 & Administration & 10.10.10.0/24 & postes administratifs, poste d'administration \\
+20 & Soins & 10.10.20.0/24 & postes des unités de soins \\
+30 & Biomédical & 10.10.30.0/24 & équipements biomédicaux, imagerie \\
+40 & Serveurs & 10.10.40.0/24 & serveurs applicatifs, annuaire, serveur Wazuh \\
+50 & Invités & 10.10.50.0/24 & visiteurs, accès Internet seul \\
+\hline
+\end{tabular}
+\caption{Zones surveillées et plan d'adressage du laboratoire (proposition)}
+\label{tab:vlan}
+\end{table}
+
+\subsection{Positionnement de la sonde}
+
+Suricata est installé sur le pare-feu OPNsense, par lequel transitent tous les flux entre zones et vers l'extérieur (figure~\ref{fig:cible}). Il inspecte ainsi les flux inter-zones, les plus révélateurs d'une propagation latérale, ainsi que le trafic entrant et sortant.
+
+Sur le réseau réel, le schéma de l'architecture fait ressortir deux emplacements possibles. Le premier est un port miroir du switch fédérateur, qui alimente une sonde passive : il ne perturbe pas le trafic et convient à la phase IDS. Le second est l'insertion de la sonde en coupure entre le routeur et le switch fédérateur : il permet le blocage, mais fait de la sonde un point de défaillance et impose un mécanisme de contournement ou une redondance. Le laboratoire reproduit le second cas, car il permet de tester l'IDS comme l'IPS.
+
+\begin{figure}[htbp]
+\centering
+\small
+\begin{tikzpicture}[
+  zone/.style={draw, rounded corners=2pt, align=center, minimum height=9mm, text width=2.2cm, font=\scriptsize},
+  node distance=3mm]
+  \node[zone, fill=gray!25, text width=4.2cm] (fw) {Pare-feu OPNsense\\ \tiny Suricata : sonde IDS puis IPS};
+  \node[zone, above=8mm of fw, text width=3.6cm] (wan) {Réseau externe / Internet};
+  \node[zone, below=14mm of fw, xshift=-5.4cm] (adm) {VLAN 10\\Administration};
+  \node[zone, right=of adm] (soi) {VLAN 20\\Soins};
+  \node[zone, right=of soi] (bio) {VLAN 30\\Biomédical};
+  \node[zone, right=of bio] (srv) {VLAN 40\\Serveurs\\ \tiny + Wazuh};
+  \node[zone, right=of srv] (inv) {VLAN 50\\Invités};
+  \draw (wan) -- (fw);
+  \foreach \z in {adm,soi,bio,srv,inv} \draw (fw) -- (\z);
+\end{tikzpicture}
+\caption{Architecture cible : Suricata inspecte les flux entre zones sur le pare-feu. À remplacer par un schéma draw.io si souhaité}
+\label{fig:cible}
+\end{figure}
+
+\subsection{Flux de référence}
+
+Pour écrire des règles pertinentes, il faut connaître les flux attendus. Le tableau~\ref{tab:flux} liste les flux légitimes entre zones ; ils servent de base aux règles de détection, car tout flux hors de cette liste est suspect. Les ports applicatifs du SIH et des équipements biomédicaux sont \acompleter{à confirmer auprès du service}. Le même tableau fonde la politique de filtrage du pare-feu, qui applique le principe « tout interdit sauf exception »\cite{nist80041}.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{llXl}
+\hline
+\textbf{Source} & \textbf{Destination} & \textbf{Service} & \textbf{Décision} \\
+\hline
+Administration & Serveurs & HTTPS 443, applications du SIH & Autoriser \\
+Soins & Serveurs & applications du SIH, DICOM 104, HL7 (MLLP) & Autoriser \\
+Biomédical & Serveurs (imagerie) & DICOM uniquement & Autoriser \\
+Biomédical & Autres zones & tout & Interdire \\
+Administration & Toutes zones & SSH 22, RDP 3389 depuis les postes d'administration & Autoriser, journaliser \\
+Toutes zones & Serveurs (annuaire) & DNS 53, DHCP 67/68 & Autoriser \\
+Hôtes supervisés & Serveur Wazuh & agent 1514, enregistrement 1515 & Autoriser \\
+Pare-feu & Serveur Wazuh & syslog 514 & Autoriser \\
+Invités & Internet & DNS, HTTP, HTTPS & Autoriser \\
+Invités & Zones internes & tout & Interdire \\
+\hline
+\end{tabularx}
+\caption{Flux de référence entre zones (proposition)}
+\label{tab:flux}
+\end{table}
+
+\subsection{Stratégie de déploiement et gestion des règles}
+
+La mise en service est progressive. Suricata fonctionne d'abord en mode IDS, ce qui permet d'observer les alertes sans risque pour le trafic. Après réglage des faux positifs, certaines règles à haute confiance passent en mode IPS (action \texttt{drop}). Le jeu de règles combine ET Open et des règles locales couvrant les flux DICOM et HL7, les accès d'administration anormaux et les comportements de balayage ou de force brute. Chaque alerte est journalisée dans \texttt{eve.json}, conservée pour analyse et relayée vers Wazuh.
+
+\subsection{Éléments complémentaires}
+
+La segmentation par zones et la supervision par Wazuh complètent le système sans en être l'objet : la première donne à la sonde de la visibilité sur les flux inter-zones, la seconde facilite la lecture des alertes. Elles sont mises en place dans le laboratoire à ce titre, et leur généralisation au réseau de production relève des recommandations.
+
+\addcontentsline{toc}{section}{Conclusion}
+\section*{Conclusion}
+
+L'audit confirme la pertinence de la problématique : l'absence de segmentation expose le parc à une propagation rapide en cas de compromission d'un seul équipement, et aucun mécanisme de détection d'intrusion n'a été identifié. Ces constats fondent le système proposé : Suricata, déployé sur OPNsense, inspectant les flux entre cinq zones, d'abord en IDS puis en IPS. Le chapitre suivant décrit son déploiement en laboratoire et son évaluation.

@@ -1,0 +1,7 @@
+\conclusion
+
+Ce mémoire s'est donné pour objectif de mettre en place, au CNHU-HKM, un système de détection et de prévention d'intrusion capable de repérer et de bloquer les attaques visant le réseau, sans compromettre la disponibilité des services de soins. L'audit a montré l'absence de segmentation visible et de détection d'intrusion sur le segment analysé ; après comparaison des solutions, Suricata a été déployé sur OPNsense, d'abord en mode IDS puis en mode IPS, avec des règles adaptées aux flux hospitaliers, et évalué en laboratoire par des scénarios rattachés à MITRE ATT\&CK. \acompleter{résumé des résultats du chapitre~\ref{chap:3} et de ce qu'ils démontrent par rapport à la problématique}
+
+Ce travail apporte au CNHU-HKM un état des lieux documenté, un système de détection testé et des recommandations de déploiement progressif. Ses limites doivent être assumées : l'évaluation s'est faite en environnement virtualisé, avec un nombre limité de scénarios, et le périmètre ne couvre pas l'ensemble de l'infrastructure réelle.
+
+Plusieurs perspectives se dégagent : segmentation complète du réseau par zones, supervision centralisée des alertes avec Wazuh, haute disponibilité du pare-feu, contrôle d'accès réseau (802.1X) et automatisation avec Ansible.

@@ -1,0 +1,153 @@
+\addcontentsline{toc}{section}{Introduction}
+\section*{Introduction}
+
+Ce premier chapitre pose le cadre de l'étude. Il présente le CNHU-HKM et le déroulement du stage, puis les enjeux propres à la cybersécurité hospitalière. Il établit enfin l'état de l'art des notions et technologies mobilisées : segmentation réseau, pare-feu, détection et prévention d'intrusion, supervision de sécurité et méthodologies d'évaluation.
+
+\section{Présentation du CNHU-HKM}
+
+\subsection{Historique et missions}
+
+L'établissement trouve son origine dans la loi n°~62-36 du 30 octobre 1962, qui a créé l'Hôpital de Cotonou et l'a doté de l'autonomie financière. Il a ensuite été érigé en Centre National Hospitalier par le décret n°~490/PR/MSPAS du 21 décembre 1966, puis en Centre National Hospitalier et Universitaire de Cotonou par le décret n°~73-8 du 10 janvier 1973, ses statuts étant approuvés par le décret n°~91-77 du 13 mai 1991\cite{decret2015}. Le décret n°~2012-422 du 6 novembre 2012 lui a donné son nom actuel en l'attachant à Hubert Koutoukou Maga\cite{decret2012}, et le décret n°~2015-396 du 20 juillet 2015, texte de référence sur ses attributions, son organisation et son fonctionnement, a abrogé le précédent\cite{decret2015}. Le gouvernement a par ailleurs décidé en septembre 2022 de fusionner le CNHU-HKM et l'hôpital d'instruction des armées de Cotonou\cite{fusion2022} \acompleter{préciser avec le tuteur l'état actuel de cette fusion et ses effets sur l'organisation du centre}.
+
+Selon le décret de 2015, le CNHU-HKM est un office à caractère social et scientifique, doté de la personnalité morale et de l'autonomie financière, placé sous la tutelle du ministère en charge de la Santé et dont le siège est fixé à Cotonou, chef-lieu du département du Littoral\cite{decret2015}. Il est qualifié d'établissement de référence nationale et assure des prestations de soins préventifs, curatifs, promotionnels et réadaptatifs ; il participe en outre à la formation du personnel de santé et à la recherche en santé, et appartient à l'espace hospitalier et universitaire\cite{decret2015}. Ces trois missions, soins, enseignement et recherche, expliquent la diversité des usages que son réseau informatique doit supporter. Le centre est actuellement engagé dans un programme de réhabilitation complète de ses infrastructures, annoncé par le ministre de la Santé lors de l'installation de son nouveau conseil d'administration en octobre 2025\cite{ca2025}.
+
+\subsection{Organisation générale}
+
+\paragraph{Gouvernance.} Le centre est administré par un conseil d'administration dont les membres sont nommés par décret en conseil des ministres pour trois ans\cite{decret2015}. Sa composition a évolué : treize membres en 2015\cite{decret2015}, sept depuis le décret du 20 mars 2019\cite{decret2019}. Un nouveau conseil de sept membres, présidé par le représentant du ministère de la Santé, a été nommé par décret du 10 septembre 2025 pour un mandat de trois ans renouvelable\cite{ca2025nom}. Le conseil définit la politique générale de l'établissement, adopte son budget et son organigramme, et approuve le recrutement et la révocation du directeur général\cite{ca2025}.
+
+\paragraph{Direction.} La gestion quotidienne est assurée par la Direction générale. Le directeur général est nommé par décret pris en conseil des ministres et peut être assisté d'un directeur général adjoint, nommé par arrêté du ministre de la Santé\cite{decret2015}. Le décret de 2015 place sous la coordination du directeur général adjoint \emph{la cellule informatique}, la cellule des statistiques et du contrôle de gestion et la cellule des archives et de la documentation\cite{decret2015}. Cinq structures techniques complètent la Direction générale : la Direction des Affaires Médicales, la Direction des Ressources Humaines, la Direction des Affaires Économiques, la Direction du Budget et l'Agence Comptable\cite{decret2015}. La Direction des Affaires Économiques est notamment chargée de la gestion des infrastructures, des équipements et de leur maintenance\cite{decret2015}.
+
+\paragraph{Organes consultatifs.} Quatre comités et commissions spécialisés éclairent la gestion : le Comité de Direction, la Commission Médicale d'Établissement (CME), la Commission d'Hygiène et de Sécurité et le Comité de Lutte contre les Infections Nosocomiales\cite{decret2015}. La CME doit notamment donner son avis sur le choix du matériel médico-technique, ce qui concerne directement les équipements biomédicaux connectés au réseau.
+
+\begin{figure}[htbp]
+\centering
+\small
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=2pt, align=center, minimum height=8mm,
+              text width=2.6cm, inner sep=2pt, font=\scriptsize},
+  top/.style={box, fill=gray!20, text width=4.2cm},
+  node distance=6mm and 4mm]
+  \node[top] (ca) {Conseil d'administration};
+  \node[top, below=of ca] (dg) {Directeur général};
+  \node[top, below=of dg] (dga) {Directeur général adjoint};
+  \node[box, below=10mm of dga] (inf) {Cellule informatique};
+  \node[box, left=of inf] (sta) {Cellules statistiques et contrôle de gestion};
+  \node[box, right=of inf] (arc) {Cellule archives et documentation};
+  \node[box, below=14mm of inf, xshift=-4.1cm] (dam) {Direction des Affaires Médicales};
+  \node[box, right=of dam] (drh) {Direction des Ressources Humaines};
+  \node[box, right=of drh] (dae) {Direction des Affaires Économiques};
+  \node[box, right=of dae] (dbu) {Direction du Budget};
+  \node[draw, dashed, inner sep=4pt, fit=(dam)(drh)(dae)(dbu), label={[font=\scriptsize]below:Structures techniques de la Direction générale}] (st) {};
+  \draw (ca) -- (dg) -- (dga);
+  \draw (dga) -- ++(0,-0.5) -| (sta);
+  \draw (dga) -- (inf);
+  \draw (dga) -- ++(0,-0.5) -| (arc);
+\end{tikzpicture}
+\caption{Organisation simplifiée du CNHU-HKM, d'après le décret n°~2015-396 (l'Agence Comptable et les comités spécialisés ne sont pas représentés). À valider avec le service informatique.}
+\label{fig:organigramme}
+\end{figure}
+
+\subsection{Le service informatique et réseau}
+
+Le décret de 2015 ne définit pas de « service informatique » en tant que direction : il prévoit une \emph{cellule informatique} coordonnée par le directeur général adjoint\cite{decret2015}. Dans la pratique, l'informatique de l'établissement est portée par la Cellule des Systèmes d'Information (CSI), chargée de l'infrastructure informatique et des télécommunications, et qui intervient dans les services médicaux, administratifs et techniques\cite{kaho2026}. Cette cellule correspond vraisemblablement à la cellule informatique du décret \acompleter{à confirmer avec le tuteur}. Elle se compose de trois unités (figure~\ref{fig:csi}) : l'Unité de Gestion des Réseaux Informatiques et de la Maintenance (UGRIM), l'Unité d'Exploitation et de Développement Informatique (UEDI) et l'Unité Administrative des Archives et Médicales (UAAM)\cite{kaho2026}.
+
+\begin{figure}[htbp]
+\centering
+\small
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=2pt, align=center, minimum height=9mm, text width=4.2cm, font=\scriptsize},
+  node distance=8mm]
+  \node[box, fill=gray!20] (csi) {Cellule des Systèmes d'Information (CSI)};
+  \node[box, below=of csi, xshift=-5cm] (ugrim) {UGRIM\\ réseaux et maintenance};
+  \node[box, below=of csi] (uedi) {UEDI\\ exploitation et développement};
+  \node[box, below=of csi, xshift=5cm] (uaam) {UAAM\\ archives administratives et médicales};
+  \draw (csi) -- ++(0,-0.6) -| (ugrim);
+  \draw (csi) -- (uedi);
+  \draw (csi) -- ++(0,-0.6) -| (uaam);
+\end{tikzpicture}
+\caption{Organisation de la CSI, d'après le rapport de stage\cite{kaho2026}. À valider avec le tuteur.}
+\label{fig:csi}
+\end{figure}
+
+Le stage s'est déroulé à l'UGRIM. Cette unité gère et fait évoluer les infrastructures réseau et télécoms de l'hôpital : réseaux filaires, Wi-Fi, téléphonie et installations audiovisuelles. Elle agit sur le plan préventif (installation, configuration, sécurisation) et curatif (dépannage, résolution d'incidents), et reçoit directement les requêtes des utilisateurs\cite{kaho2026}. Elle déploie, supervise et maintient les commutateurs, routeurs et points d'accès, et met en place des procédures pour protéger les connexions et prévenir les intrusions\cite{kaho2026}. L'UEDI s'occupe des applications métiers, de l'administration des serveurs physiques et virtuels, du stockage central et des sauvegardes ; l'UAAM de la gestion des archives médicales et administratives, y compris leur numérisation\cite{kaho2026}. L'effectif de chaque unité et le parc géré sont \acompleter{à compléter avec le tuteur}. L'audit du 9~octobre a déjà révélé 85 hôtes actifs sur un seul segment /23, ce qui constitue un premier indicateur de la taille du parc.
+
+\section{Déroulement du stage}
+
+\subsection{Accueil et intégration}
+Le stage a été effectué au sein de l'UGRIM, rattachée à la CSI. L'encadrement est assuré par le chef de l'UGRIM et l'équipe technique de l'unité\cite{kaho2026}. \acompleter{date de début, noms de vos encadrants et modalités d'intégration, propres à votre stage}
+
+\subsection{Tâches confiées}
+Les stagiaires de l'unité sont associés à des missions courantes : maintenance des postes de travail, support aux utilisateurs, installation d'imprimantes réseau, câblage et sertissage de câbles Ethernet, configuration de commutateurs, installation d'équipements (points d'accès Wi-Fi, caméras, onduleurs) et assistance aux travaux de segmentation par VLAN\cite{kaho2026}. Ces activités donnent une vision concrète de l'infrastructure sur laquelle porte ce mémoire. \acompleter{ajuster à vos propres tâches et à leur part dans le service}
+
+\subsection{Genèse et validation du sujet}
+
+Le sujet de ce mémoire a été défini en concertation avec le tuteur de stage, à partir d'un double constat : d'une part, l'absence d'une politique de segmentation réseau formalisée au sein de l'infrastructure existante ; d'autre part, la volonté de renforcer les compétences et les moyens en cybersécurité de la cellule, avec en particulier un pare-feu avancé associé à des systèmes de détection et de prévention d'intrusion (IDS/IPS), axe de modernisation déjà identifié au sein de l'unité\cite{kaho2026} \acompleter{confirmer avec le tuteur le besoin qu'il a exprimé}. Ce travail s'inscrit en complément des travaux de segmentation par VLAN menés par l'UGRIM, en ajoutant le filtrage entre zones, la détection d'intrusion et la supervision. Le périmètre du projet, les autorisations d'accès à la documentation réseau et les modalités de travail ont fait l'objet d'un accord formalisé avec le service, présenté en annexe~\ref{annexe1}.
+
+\section{Enjeux de la cybersécurité en milieu hospitalier}
+
+\subsection{Spécificités d'un système d'information de santé}
+
+Un système d'information hospitalier (SIH) se distingue des systèmes d'information classiques par trois exigences qui entrent parfois en tension. La disponibilité y est critique : une interruption, même brève, d'un service comme le dossier patient informatisé, l'imagerie ou la prescription électronique peut retarder une prise en charge. La confidentialité des données de santé, protégées par le secret médical et par les cadres légaux de protection des données personnelles, impose des contrôles d'accès stricts. Enfin, l'hétérogénéité du parc, avec des postes bureautiques, des serveurs applicatifs, mais aussi des équipements biomédicaux souvent anciens, rarement conçus avec la sécurité comme exigence première et difficiles à mettre à jour, complique l'application de mesures de sécurité uniformes.
+
+\subsection{Panorama des menaces visant les hôpitaux}
+
+Le premier rapport de l'agence européenne ENISA consacré au secteur de la santé couvre la période de janvier 2021 à mars 2023 et analyse 215 incidents rendus publics dans l'Union européenne et les pays voisins\cite{enisa2023,enisa2023slides}. Les prestataires de soins y représentent 53~\% des incidents et les hôpitaux à eux seuls 42~\%\cite{enisa2023}. Le rançongiciel est l'une des principales menaces du secteur (54~\% des incidents), notamment du fait de la valeur des données des patients, qui sont l'actif le plus ciblé par ces attaques (30~\%)\cite{enisa2023press,infosec2023}. Le rapport observe aussi que seules 27~\% des organisations interrogées disposent d'un programme dédié de défense contre les rançongiciels\cite{heimdal2023}, et retient parmi les défis du secteur les vulnérabilités des dispositifs médicaux\cite{enisa2023slides}. Les conséquences dépassent la perte de données : ces attaques ont provoqué des interruptions de services de soins et ont été associées à des décès de patients\cite{infosec2023}.
+
+Ces constats concernent l'Europe et ne décrivent pas la situation du Bénin ; ils sont retenus ici comme référence sur la nature des menaces. Ils appuient la justification de la segmentation, qui vise précisément à empêcher qu'un poste compromis, point d'entrée fréquent d'un rançongiciel, ne permette d'atteindre les serveurs applicatifs.
+
+\subsection{Cadre réglementaire applicable}
+
+Au Bénin, la protection des données à caractère personnel relève du Livre~V du Code du numérique, institué par la loi n°~2017-20 du 20 avril 2018 et modifiée par la loi n°~2020-35 du 6 janvier 2021\cite{codenum,asin}. Le code identifie l'Autorité de Protection des Données à caractère Personnel (APDP) comme autorité de contrôle\cite{codenum}. Tout traitement de données personnelles y est soumis à une autorisation préalable de l'APDP, conformément à l'article~405\cite{apdp405}. Les articles 425 et 426, relatifs à la gestion et à la sécurité des données, sont ceux auxquels l'APDP renvoie pour la protection des données de santé\cite{apdp2024}.
+
+Interrogée sur les données de santé, une représentante de l'APDP recommande, sans préjudice des règles classiques de sécurité informatique, d'utiliser l'authentification à deux facteurs, de bâtir des réseaux et systèmes sécurisés, de chiffrer les données sensibles, de limiter les accès, de réaliser des sauvegardes régulières et de sensibiliser les employés\cite{apdp2024}. Ces recommandations recoupent les mesures du présent mémoire : segmentation, filtrage, supervision et durcissement des accès d'administration. Le Code du numérique prévoit en outre une agence nationale chargée de contrôler le niveau de sécurité des systèmes d'information, l'ANSSI-Bénin\cite{codenum}.
+
+Les référentiels internationaux ISO/IEC 27001, ISO/IEC 27799 et PGSSI-S sont mobilisés comme cadre de référence méthodologique et non comme obligation réglementaire locale \acompleter{vérifier chaque référence avant citation}.
+
+\section{Place de l'IDS/IPS dans l'architecture de sécurité}
+
+La sécurité d'un réseau repose sur la superposition de plusieurs mesures complémentaires, la défense en profondeur. Trois d'entre elles encadrent le système étudié dans ce mémoire.
+
+La segmentation réseau divise une infrastructure en zones séparées, de façon à ce que la compromission d'un équipement ne se propage pas automatiquement aux autres. Elle s'appuie sur des réseaux virtuels (VLAN, \emph{Virtual Local Area Network}) et sur des zones de sécurité telles que la zone démilitarisée (DMZ). En milieu hospitalier, elle vise à isoler les équipements biomédicaux, dont le micrologiciel est rarement mis à jour, des postes administratifs et des serveurs. Les flux métiers propres au secteur, en particulier le protocole DICOM (\emph{Digital Imaging and Communications in Medicine}) pour l'imagerie et le standard HL7 (\emph{Health Level 7}) pour l'échange de données cliniques, doivent être explicitement identifiés.
+
+Le pare-feu contrôle le passage entre zones selon une politique explicite. Un pare-feu à état (\emph{stateful}) conserve la table des connexions actives et autorise le trafic de retour légitime, là où un pare-feu sans état traite chaque paquet isolément\cite{nist80041}. Il décide toutefois à partir d'adresses, de ports et de protocoles, et n'analyse pas nécessairement le comportement d'un flux pourtant autorisé. OPNsense est une distribution de pare-feu open source fondée sur FreeBSD, dérivée du projet pfSense, qui propose un filtrage à état, une interface web d'administration, un VPN et un service de détection et de prévention d'intrusion fondé sur Suricata\cite{opnsensedoc}. Elle a fait l'objet d'une évaluation de sécurité par le laboratoire jtsec\cite{jtsec} \acompleter{préciser la nature de l'évaluation (certification, qualification) d'après le rapport}, ce qui constitue un élément objectif en faveur de sa fiabilité.
+
+L'IDS/IPS comble cette limite : il inspecte le contenu et le comportement du trafic, y compris celui que le pare-feu autorise, et signale ou bloque ce qui ressemble à une attaque. Il constitue ainsi la brique centrale de ce travail.
+
+\section{Détection et prévention d'intrusion}
+
+\subsection{Principes}
+
+Un système de détection d'intrusion (IDS, \emph{Intrusion Detection System}) analyse le trafic réseau ou l'activité d'un système à la recherche de signes d'activité malveillante et génère une alerte lorsqu'il en détecte, sans intervenir sur le trafic. Un système de prévention d'intrusion (IPS, \emph{Intrusion Prevention System}) va plus loin : placé en coupure sur le flux, il peut bloquer activement le trafic identifié comme malveillant\cite{nist80094}. On distingue les systèmes réseau (NIDS), qui observent le trafic en un point du réseau, et les systèmes hôte (HIDS), qui surveillent l'activité d'une machine (journaux, fichiers, processus).
+
+La détection s'appuie sur deux approches complémentaires. La détection par signatures compare le trafic à une base de motifs d'attaques connues : elle est précise mais limitée aux menaces déjà répertoriées. La détection par anomalies repère les écarts par rapport à un comportement de référence : elle peut déceler des menaces inédites, au prix d'un taux de faux positifs plus élevé\cite{nist80094}. Un faux positif est une alerte déclenchée par un trafic légitime ; un faux négatif est une attaque qui passe sans alerte. Pour un IPS, un faux positif est plus grave encore, puisqu'il peut bloquer un flux de soins légitime.
+
+\subsection{Positionnement d'une sonde}
+
+Le mode de déploiement conditionne ce que le système peut faire. En mode passif, la sonde reçoit une copie du trafic (port miroir ou TAP) : elle détecte et alerte sans jamais perturber le flux, ce qui en fait le mode adapté à une première phase. En mode en coupure (\emph{inline}), tout le trafic traverse la sonde, qui peut le bloquer, mais qui devient aussi un point de défaillance : une panne ou une saturation interrompt la circulation\cite{nist80094}. Cette contrainte est déterminante en milieu hospitalier et motive une mise en service progressive, de l'IDS vers l'IPS.
+
+\subsection{Suricata}
+
+Suricata est un moteur de détection et de prévention d'intrusion open source, capable de fonctionner en mode IDS comme en mode IPS. Il analyse le trafic à l'aide de règles, dont le jeu ET Open (\emph{Emerging Threats Open}), mis à jour par une communauté de chercheurs en sécurité, et accepte des règles personnalisées. Une règle comprend une action (\texttt{alert} pour signaler, \texttt{drop} pour bloquer en mode IPS), un en-tête décrivant le protocole, les adresses, les ports et le sens du flux, puis des options entre parenthèses (message, contenu recherché, seuils, identifiant \texttt{sid}). Suricata journalise les événements dans un format structuré, \texttt{eve.json}, exploitable par un outil de supervision tiers\cite{suricatadoc}. La documentation de la version 8.0.7 présente par ailleurs un mode pare-feu expérimental, dont la politique par défaut est le rejet\cite{suricata} ; il n'est pas retenu ici et reste une piste d'évolution.
+
+\subsection{Limites}
+
+Un IDS/IPS ne remplace pas les autres mesures. Il ne voit pas le contenu du trafic chiffré, il demande un réglage continu des règles pour limiter les faux positifs, et son efficacité dépend de la qualité et de la mise à jour de son jeu de signatures. Sa charge de traitement augmente avec le débit inspecté, ce qui impose de mesurer son impact sur les performances.
+
+\section{Exploitation des alertes}
+
+Les alertes d'une sonde ne servent que si quelqu'un les lit. Un système de gestion des informations et des événements de sécurité (SIEM, \emph{Security Information and Event Management}) centralise les journaux de plusieurs équipements, les corrèle et alerte sur les comportements suspects ; certains offrent une réponse active, comme le blocage temporaire d'une adresse source. Wazuh est une solution open source structurée autour d'un gestionnaire, d'un indexeur et d'un tableau de bord web, qui peut collecter les journaux d'un pare-feu ou d'une sonde Suricata\cite{wazuhdoc}. Dans ce mémoire, Wazuh est utilisé comme outil complémentaire pour visualiser les alertes de Suricata ; il n'en est pas l'objet principal.
+
+\section{Méthodologies d'évaluation}
+
+MITRE ATT\&CK est une base de connaissances publique qui répertorie les tactiques et techniques employées par les attaquants, organisées selon les phases d'une attaque (reconnaissance, accès initial, mouvement latéral, etc.)\cite{attck}. Elle permet de nommer chaque scénario de test selon une nomenclature reconnue.
+
+L'évaluation consiste à rejouer les mêmes scénarios d'attaque dans un environnement de test identique, successivement sans système de détection (état « avant »), puis avec Suricata en IDS et en IPS (états « après »). Cette comparaison mesure l'apport du système à travers le nombre d'attaques détectées ou bloquées, le délai de détection, le nombre de faux positifs et l'impact sur les performances. Les limites d'un environnement virtualisé sont discutées en section~\ref{sec:limites}.
+
+\section{Travaux et solutions existants}
+
+\acompleter{identifier deux à quatre mémoires, articles ou études de cas portant sur la sécurisation de réseaux hospitaliers ou sur l'usage combiné de pare-feu open source, d'IDS/IPS et de SIEM. Pour chacun : approche, résultats, puis positionnement de ce mémoire (contexte local à ressources limitées, parc hétérogène, évaluation avant/après). Aucune référence n'est ajoutée ici tant qu'elle n'a pas été lue et vérifiée.}
+
+\addcontentsline{toc}{section}{Conclusion}
+\section*{Conclusion}
+
+Ce chapitre a situé le cadre institutionnel du stage et mis en évidence les exigences propres à la sécurité d'un système d'information hospitalier : disponibilité, confidentialité et hétérogénéité du parc. Il a présenté les fondements théoriques mobilisés : segmentation, filtrage par pare-feu, détection et prévention d'intrusion, supervision des événements de sécurité, ainsi que le référentiel MITRE ATT\&CK et la démarche d'évaluation comparative. Le chapitre suivant présente l'audit du réseau existant, compare les solutions candidates et expose la conception de l'architecture retenue.
