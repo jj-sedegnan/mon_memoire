@@ -1,3 +1,118 @@
-\chapter*{Annexes}\addcontentsline{toc}{chapter}{Annexes}\label{annexe1}
+\chapter*{Annexes}\addcontentsline{toc}{chapter}{Annexes}
 
-\acompleter{annexe A : journal de bord (extraits) ; annexe B : fiche de durcissement OPNsense ; annexe C : configurations complètes ; annexe D : règles Suricata personnalisées ; annexe E : résultats bruts des scans et des tests ; annexe F : matrice de flux complète ; annexe G : schémas réseau avant/après ; annexe H : autorisation de stage et cadrage du sujet}
+Les annexes regroupent les éléments justificatifs du mémoire. Celles qui correspondent à des documents ou à des mesures non encore disponibles portent un marquage explicite : elles ne contiennent aucune donnée reconstituée.
+
+\section*{Annexe A -- Journal de bord du stage}
+\addcontentsline{toc}{section}{Annexe A -- Journal de bord du stage}
+
+Le journal de bord atteste du déroulement réel du stage. Seul son squelette est fourni ici ; les lignes doivent être complétées à partir des notes tenues pendant la période de stage, sans reconstruction a posteriori.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{llXl}
+\hline
+\textbf{Date} & \textbf{Phase} & \textbf{Activité réalisée} & \textbf{Problème / solution} \\
+\hline
+\acompleter{ligne 1} & & & \\
+\acompleter{ligne 2} & & & \\
+\acompleter{lignes suivantes} & & & \\
+\hline
+\end{tabularx}
+\caption{Trame du journal de bord, à compléter avec les entrées effectives}
+\label{tab:journal}
+\end{table}
+
+\section*{Annexe B -- Fiche de durcissement d'OPNsense (proposition)}
+\addcontentsline{toc}{section}{Annexe B -- Fiche de durcissement d'OPNsense}
+
+Cette fiche est une proposition méthodologique ; les points cochés devront correspondre à une configuration effectivement appliquée et vérifiée sur l'installation du laboratoire.
+
+\begin{itemize}
+\item politique de filtrage en refus par défaut, seuls les flux du tableau de référence étant ouverts ;
+\item restriction de l'interface d'administration au seul VLAN Administration, avec interdiction d'accès depuis les zones Invités et depuis l'interface WAN ;
+\item comptes d'administration nominatifs, mots de passe robustes et, si l'édition le permet, authentification multifacteur ;
+\item planification des mises à jour de sécurité et figement de la version utilisée, à reporter dans le tableau des versions du chapitre~\ref{chap:3} ;
+\item désactivation des services non utilisés ;
+\item activation de la journalisation et redirection des journaux par syslog vers le serveur Wazuh ;
+\item sauvegarde de la configuration avant chaque modification et conservation chiffrée des exports ;
+\item promotion d'une règle Suricata en action \texttt{drop} uniquement après la période d'observation en IDS.
+\end{itemize}
+
+\preuves{export de la configuration effective (\texttt{config.xml}) et captures d'écran des écrans correspondant à chaque point appliqué.}
+
+\section*{Annexe C -- Configurations du laboratoire}
+\addcontentsline{toc}{section}{Annexe C -- Configurations du laboratoire}
+
+Les fichiers de configuration suivants doivent être joints dans leur version effective, accompagnés de leur date d'export :
+
+\begin{itemize}
+\item configuration complète d'OPNsense (export \texttt{config.xml}) : interfaces, VLAN, règles de filtrage ;
+\item fichier de configuration de Suricata : variables d'adresses (cf. tableau des variables du chapitre~\ref{chap:3}), interfaces surveillées, activation de \texttt{eve.json} ;
+\item fichier des règles locales, reproduit en annexe~D ;
+\item configuration du pont réseau de l'hôte de virtualisation et caractéristiques des machines virtuelles.
+\end{itemize}
+
+\acompleter{insérer ici les exports réels ; aucun extrait de configuration n'est fabriqué en l'absence du laboratoire exécuté.}
+
+\section*{Annexe D -- Jeu de règles locales Suricata}
+\addcontentsline{toc}{section}{Annexe D -- Jeu de règles locales Suricata}
+
+Le fichier \texttt{local.rules} proposé reprend les cinq règles présentées et commentées au chapitre~\ref{chap:3}. Il n'est réputé chargé qu'après un test de configuration réussi et le déclenchement vérifié de chaque règle.
+
+\begin{lstlisting}[language={},breaklines=true,basicstyle=\ttfamily\scriptsize]
+# R1 - trafic DICOM (104) vers l'imagerie depuis une zone non autorisee
+alert tcp !$ZONE_SOINS_BIOMED any -> $SERVEURS_IMAGERIE 104 (msg:"CNHU DICOM depuis zone non autorisee"; flow:to_server; classtype:policy-violation; sid:1000001; rev:2;)
+# R2 - acces SMB (445) vers les serveurs
+alert tcp any any -> $SERVEURS 445 (msg:"CNHU SMB vers serveurs"; flow:to_server; classtype:policy-violation; sid:1000002; rev:2;)
+# R3 - trafic HL7/MLLP (2575) vers le SIH depuis une zone non autorisee
+alert tcp !$ZONE_SOINS any -> $SERVEURS_SIH 2575 (msg:"CNHU HL7 depuis zone non autorisee"; flow:to_server; classtype:policy-violation; sid:1000003; rev:2;)
+# R4 - force brute SSH : 5 SYN d'une meme source en 60 s
+alert tcp any any -> $SERVEURS 22 (msg:"CNHU SSH tentatives repetees"; flow:to_server; flags:S; classtype:attempted-admin; detection_filter:track by_src, count 5, seconds 60; sid:1000004; rev:2;)
+# R5 - balayage : 20 SYN d'une meme source en 5 s
+alert tcp any any -> $HOME_NET any (msg:"CNHU balayage de ports"; flags:S; classtype:attempted-recon; detection_filter:track by_src, count 20, seconds 5; sid:1000005; rev:2;)
+\end{lstlisting}
+
+Les commandes de contrôle (\texttt{suricata -T}, rejeu de capture et interrogation de \texttt{eve.json}) sont celles du chapitre~\ref{chap:3} ; leurs sorties réelles doivent être archivées en annexe~E.
+
+\section*{Annexe E -- Résultats bruts des scans et des tests}
+\addcontentsline{toc}{section}{Annexe E -- Résultats bruts des scans et des tests}
+
+Cette annexe accueille les sorties non modifiées des commandes exécutées. Pour l'audit réseau, doivent être archivées les sorties complètes de la découverte d'hôtes (\texttt{nmap -sn}) et du balayage ciblé avec détection de version (\texttt{nmap -sV}) sur les sept ports, dans les formes exactes utilisées le 9~octobre. Pour l'évaluation, le tableau~\ref{tab:preuves} précise, pour chaque scénario, les éléments à joindre.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{clX}
+\hline
+\textbf{Scénario} & \textbf{États} & \textbf{Éléments à archiver} \\
+\hline
+S1 à S7 & A, B, C & commande lancée et sortie complète ; horodatage de début ; extrait \texttt{eve.json} (états B et C) ; preuve de blocage (état C) \\
+\hline
+\end{tabularx}
+\caption{Manifestation des preuves brutes à recueillir par scénario}
+\label{tab:preuves}
+\end{table}
+
+\acompleter{déposer les fichiers de sortie réels ; en l'absence d'exécution, cette annexe reste vide et le chapitre~\ref{chap:3} conserve ses emplacements de mesure.}
+
+\section*{Annexe F -- Matrice de flux complète}
+\addcontentsline{toc}{section}{Annexe F -- Matrice de flux complète}
+
+La matrice de flux est une proposition de politique, construite à partir des usages décrits avec le service ; elle devra être validée par l'UGRIM avant tout déploiement. Sa version de synthèse constitue le tableau de flux du chapitre~\ref{chap:2} ; les ports applicatifs du SIH et des équipements biomédicaux restent à confirmer.
+
+\acompleter{étendre la matrice avec l'ensemble des services effectivement recensés (ports, sens, journalisation) après validation par le service.}
+
+\section*{Annexe G -- Schémas réseau avant et après}
+\addcontentsline{toc}{section}{Annexe G -- Schémas réseau avant et après}
+
+Les figures du chapitre~\ref{chap:2} (architecture existante et architecture cible) sont actuellement des schémas TikZ simplifiés. Les schémas d'origine du service et les schémas cibles au format vectoriel (PDF ou SVG, par exemple exportés de draw.io) doivent être joints ici, après obtention de l'autorisation de reproduction du document interne.
+
+\acompleter{insérer les schémas validés par le service informatique.}
+
+\section*{Annexe H -- Autorisation de stage et cadrage du sujet}
+\addcontentsline{toc}{section}{Annexe H -- Autorisation de stage et cadrage du sujet}
+
+Cette annexe doit contenir le document signé par le tuteur de stage fixant : le périmètre autorisé pour la consultation de la documentation réseau ; l'autorisation des opérations de découverte (balayage d'hôtes et de ports) ; l'interdiction des tests d'intrusion actifs sur le réseau de production sans accord explicite ; l'engagement de ne pas consulter de données patients ; les règles d'anonymisation des informations sensibles.
+
+\acompleter{insérer l'autorisation signée ; le mémoire ne peut présenter les manipulations comme autorisées sans ce document.}

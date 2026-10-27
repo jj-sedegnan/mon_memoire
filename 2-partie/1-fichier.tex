@@ -7,11 +7,29 @@ Ce chapitre décrit la démarche suivie, présente les résultats de l'audit du 
 
 \subsection{Étapes du projet}
 
-Le projet s'est déroulé en cinq phases successives, étalées sur \acompleter{X} semaines : un audit du réseau existant, une phase de conception de l'architecture cible, une phase de réalisation en environnement de test virtualisé, une phase d'évaluation expérimentale par des scénarios d'attaque, et une phase de synthèse donnant lieu à des recommandations pour un déploiement progressif au CNHU-HKM. \acompleter{diagramme de Gantt simplifié ou tableau du calendrier effectivement suivi, à produire à partir du journal de bord}
+Le projet s'est déroulé en cinq phases successives, étalées sur \acompleter{X} semaines : un audit du réseau existant, une phase de conception de l'architecture cible, une phase de réalisation en environnement de test virtualisé, une phase d'évaluation expérimentale par des scénarios d'attaque, et une phase de synthèse donnant lieu à des recommandations pour un déploiement progressif au CNHU-HKM. Le tableau~\ref{tab:calendrier} fixe le calendrier prévisionnel de ces phases ; les dates et durées effectives doivent être reportées depuis le journal de bord, aucune durée n'étant indiquée tant qu'elle n'est pas attestée.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{cllX}
+\hline
+\textbf{Phase} & \textbf{Semaines effectives} & \textbf{Contenu} & \textbf{Livrable} \\
+\hline
+1 & \acompleter{dates} & Audit du réseau existant, découverte d'hôtes et de services & Résultats de balayage, constats \\
+2 & \acompleter{dates} & Conception de l'architecture cible, zones et flux & Plan d'adressage, matrice de flux \\
+3 & \acompleter{dates} & Réalisation du laboratoire virtualisé (OPNsense, Suricata, Wazuh) & Plateforme de test documentée \\
+4 & \acompleter{dates} & Évaluation expérimentale : scénarios S1 à S7, états A, B et C & Tableau de résultats et preuves \\
+5 & \acompleter{dates} & Synthèse, recommandations de déploiement progressif & Rapport final \\
+\hline
+\end{tabularx}
+\caption{Calendrier prévisionnel de réalisation ; les semaines effectives sont à reporter depuis le journal de bord}
+\label{tab:calendrier}
+\end{table}
 
 \subsection{Cadre éthique et autorisations}
 
-L'ensemble des manipulations présentées dans ce mémoire a été réalisé dans le respect d'un cadre formalisé avec le service informatique et réseau du CNHU-HKM. Une autorisation écrite du tuteur de stage a précisé le périmètre autorisé pour la consultation de la documentation réseau et pour les opérations de découverte (balayage d'hôtes et de ports), ainsi que l'engagement de ne réaliser aucun test d'intrusion actif sur le réseau de production sans accord préalable explicite. Conformément à cet engagement, aucune donnée patient n'a été consultée ni manipulée. Les informations sensibles relatives à l'infrastructure (adresses IP réelles, noms de machines) sont anonymisées lorsque leur divulgation n'apporte pas de valeur pédagogique. Cette autorisation figure en annexe~\ref{annexe1}.
+L'ensemble des manipulations présentées dans ce mémoire a été réalisé dans le respect d'un cadre formalisé avec le service informatique et réseau du CNHU-HKM. Une autorisation écrite du tuteur de stage a précisé le périmètre autorisé pour la consultation de la documentation réseau et pour les opérations de découverte (balayage d'hôtes et de ports), ainsi que l'engagement de ne réaliser aucun test d'intrusion actif sur le réseau de production sans accord préalable explicite. Conformément à cet engagement, aucune donnée patient n'a été consultée ni manipulée. Les informations sensibles relatives à l'infrastructure (adresses IP réelles, noms de machines) sont anonymisées lorsque leur divulgation n'apporte pas de valeur pédagogique. Cette autorisation signée doit figurer en annexe~H.
 
 \section{Audit du réseau existant}
 
