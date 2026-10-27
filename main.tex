@@ -22,21 +22,21 @@
 \etudiant{AKPO \textbf{Sedegnan Jean Jacques}}
 \titreDuMemoire{\Large\linespread{1.15}\selectfont Mise en place d'un système de détection et de prévention d'intrusion (IDS/IPS) pour la sécurisation des infrastructures réseau du Centre National Hospitalier et Universitaire Hubert Koutoukou Maga (CNHU-HKM)} %Implémention pour une meilleure sécurité dans les réseau LAN sous IPv6 // Proposition: Identification des vulnérabilités dans un reseau LAN IPv6 et mesures pour une meilleure sécurité.
 
-\dateSoutenance{-}
+\dateSoutenance{\acompleter{date de soutenance}}
 %\promo{2\up{ème}}
 \anneeScolaire{2025-2026}
 
 
 %%maitre de mémoire
-\encadrants{Prenom \textbf{Nom}} % tuteur de stage / encadrant IFRI : à renseigner
+\encadrants{\acompleter{nom, prénom et fonction de l'encadrant académique IFRI et du tuteur de stage}}
 
 %% Membres du Jury
 \jurys{%
 \begin{tabular}{llll}
-	Nom et prénoms du président & Grade & Entité & Président \\
-	Nom et prénoms de l'examinateur & Grade & Entité & Examinateur \\
-	Nom et prénoms du rapporteur & Grade & Entité & Rapporteur \\
-\end{tabular}	
+	\acompleter{nom du président} & \acompleter{grade} & \acompleter{entité} & Président \\
+	\acompleter{nom de l'examinateur} & \acompleter{grade} & \acompleter{entité} & Examinateur \\
+	\acompleter{nom du rapporteur} & \acompleter{grade} & \acompleter{entité} & Rapporteur \\
+\end{tabular}
 }
 
 
@@ -68,10 +68,9 @@
 % sommaire
 \pagenumbering{roman}
 
-\setcounter{tocdepth}{0}
+\setcounter{tocdepth}{2}
 \startlist{toc}
 \printlist{toc}{}{\chapter*{Sommaire}}
-\setcounter{tocdepth}{5}
 
 %% rdedicaces
 \include{0-dedicace}
@@ -91,11 +90,6 @@
 
 %liste des tableaux
 \listoftables
-\newpage
-
-%liste des algo
-\selectlanguage{french}
-\listofalgorithmes
 \newpage
 
 % Les sigles et acronymes
@@ -142,7 +136,4 @@
 
 \include{annexe}
 
-\newpage
-\tableofcontents
-
-\end{document}          
+\end{document}
