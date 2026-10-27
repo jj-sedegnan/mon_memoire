@@ -1,13 +1,13 @@
 \addcontentsline{toc}{section}{Introduction}
 \section*{Introduction}
 
-Ce chapitre décrit la démarche suivie, présente les résultats de l'audit du réseau existant du CNHU-HKM, compare les solutions IDS/IPS candidates, puis expose la conception du système de détection retenu. Les éléments de conception de la section~\ref{sec:conception} sont des propositions de travail, à valider avec le tuteur avant leur mise en œuvre.
+Ce chapitre décrit la démarche suivie, expose la méthode du futur audit du réseau du CNHU-HKM et les éléments d'architecture documentés par le service, compare les solutions IDS/IPS candidates, puis expose la conception du système de détection retenu. Les éléments de conception de la section~\ref{sec:conception} sont des propositions de travail, à valider avec le tuteur avant leur mise en œuvre.
 
 \section{Méthodologie}
 
 \subsection{Étapes du projet}
 
-Le projet s'organise en cinq phases successives, étalées sur \acompleter{X} semaines : un audit du réseau existant, une phase de conception de l'architecture cible, une phase de réalisation en environnement de test virtualisé, une phase d'évaluation expérimentale par des scénarios d'attaque, et une phase de synthèse donnant lieu à des recommandations pour un déploiement progressif au CNHU-HKM. Les deux premières phases sont réalisées et documentées dans ce mémoire. Les phases 3 et 4 n'ont pas été exécutées : elles font l'objet, au chapitre~\ref{chap:3}, d'un protocole entièrement spécifié et prêt à mettre en œuvre. Le tableau~\ref{tab:calendrier} fixe le calendrier prévisionnel de ces phases ; les dates et durées effectives doivent être reportées depuis le journal de bord, aucune durée n'étant indiquée tant qu'elle n'est pas attestée.
+Le projet s'organise en cinq phases successives, étalées sur \acompleter{X} semaines : un audit du réseau existant, une phase de conception de l'architecture cible, une phase de réalisation en environnement de test virtualisé, une phase d'évaluation expérimentale par des scénarios d'attaque, et une phase de synthèse donnant lieu à des recommandations pour un déploiement progressif au CNHU-HKM. La phase de conception (phase 2) est réalisée et documentée dans ce mémoire. La phase d'audit (phase 1) doit être conduite selon la méthode décrite dans la suite de ce chapitre ; ses résultats ne sont pas présentés ici. Les phases 3 et 4 n'ont pas été exécutées : elles font l'objet, au chapitre~\ref{chap:3}, d'un protocole entièrement spécifié et prêt à mettre en œuvre. Le tableau~\ref{tab:calendrier} fixe le calendrier prévisionnel de ces phases ; les dates et durées effectives doivent être reportées depuis le journal de bord, aucune durée n'étant indiquée tant qu'elle n'est pas attestée.
 
 \begin{table}[htbp]
 \centering
@@ -16,7 +16,7 @@ Le projet s'organise en cinq phases successives, étalées sur \acompleter{X} se
 \hline
 \textbf{Phase} & \textbf{Semaines effectives} & \textbf{Contenu} & \textbf{Livrable} \\
 \hline
-1 & \acompleter{dates} & Audit du réseau existant, découverte d'hôtes et de services & Résultats de balayage, constats \\
+1 & \acompleter{dates} & Audit du réseau existant, découverte d'hôtes et de services & Rapport d'audit et constats \\
 2 & \acompleter{dates} & Conception de l'architecture cible, zones et flux & Plan d'adressage, matrice de flux \\
 3 & \acompleter{dates} & Réalisation du laboratoire virtualisé (OPNsense, Suricata, Wazuh) & Plateforme de test documentée \\
 4 & \acompleter{dates} & Évaluation expérimentale : scénarios S1 à S7, états A, B et C & Tableau de résultats et preuves \\
@@ -29,40 +29,17 @@ Le projet s'organise en cinq phases successives, étalées sur \acompleter{X} se
 
 \subsection{Cadre éthique et autorisations}
 
-Les manipulations relevant de l'audit réseau (découverte d'hôtes et balayage de ports) sont menées dans le respect d'un cadre formalisé avec le service informatique et réseau du CNHU-HKM. Le périmètre autorisé pour la consultation de la documentation réseau et pour les opérations de découverte est fixé par une autorisation écrite du tuteur de stage \acompleter{joindre le document signé en annexe~H}, qui rappelle également l'interdiction de tout test d'intrusion actif sur le réseau de production sans accord préalable explicite. Conformément à cet engagement, aucune donnée patient n'a été consultée ni manipulée. Les informations sensibles relatives à l'infrastructure (adresses IP réelles, noms de machines) sont anonymisées lorsque leur divulgation n'apporte pas de valeur pédagogique. Les scénarios d'attaque du chapitre~\ref{chap:3} sont, quant à eux, exclusivement prévus dans le laboratoire virtualisé : ils ne doivent pas être exécutés sur le réseau de production.
+Les manipulations du futur audit réseau (découverte d'hôtes et balayage de ports) devront être menées dans le respect d'un cadre formalisé avec le service informatique et réseau du CNHU-HKM. Le périmètre autorisé pour la consultation de la documentation réseau et pour les opérations de découverte sera fixé par une autorisation écrite du tuteur de stage \acompleter{joindre le document signé en annexe~H}, qui rappellera également l'interdiction de tout test d'intrusion actif sur le réseau de production sans accord préalable explicite. Ce cadre impose qu'aucune donnée patient ne soit consultée ni manipulée. Les informations sensibles relatives à l'infrastructure (adresses IP réelles, noms de machines) seront anonymisées lorsque leur divulgation n'apportera pas de valeur pédagogique. Les scénarios d'attaque du chapitre~\ref{chap:3} sont, quant à eux, exclusivement prévus dans le laboratoire virtualisé : ils ne doivent pas être exécutés sur le réseau de production.
 
-\section{Audit du réseau existant}
+\section{Audit du réseau : méthode envisagée et éléments documentés}
 
-\subsection{Méthode de découverte}
+\subsection{Méthode de découverte envisagée}
 
-L'audit a été mené à l'aide de l'outil Nmap (version 7.98), en deux temps. Une première phase de découverte d'hôtes actifs a été réalisée par requête ARP (\texttt{nmap -sn}), sans interrogation de services, sur le segment de données du service informatique. Une seconde phase a consisté en un balayage ciblé sur sept ports associés à des services web et de vidéosurveillance (80, 443, 554, 8000, 8080, 8899, 37777), avec détection de version des services (\texttt{nmap -sV}), afin d'identifier la nature des équipements exposant un service sur ces ports. Aucun test d'intrusion, de force brute ni de capture de trafic n'a été réalisé : seule la détection de services exposés a été effectuée, conformément au cadre défini plus haut.
+L'audit réseau sera mené à l'aide de l'outil Nmap, en deux temps ; la version exacte de l'outil sera précisée lors de l'exécution. La première phase sera une découverte d'hôtes actifs par requête ARP (\texttt{nmap -sn}), sans interrogation de services, sur le segment de données du service informatique. La seconde consistera en un balayage ciblé sur sept ports associés à des services web et de vidéosurveillance (80, 443, 554, 8000, 8080, 8899, 37777), avec détection de version des services (\texttt{nmap -sV}), afin d'identifier la nature des équipements exposant un service sur ces ports. Aucun test d'intrusion, de force brute ni capture de trafic ne sera réalisé : la découverte se limitera aux services exposés, conformément au cadre éthique défini plus haut. Les sorties complètes des deux phases seront archivées sans modification en annexe~E.
 
-\subsection{Résultats de la découverte d'hôtes}
+\subsection{Nouvel audit programmé}
 
-Le balayage a identifié 85 hôtes actifs sur les 512 adresses de la plage 10.60.4.0/23 correspondant au réseau de données du service informatique, soit un taux d'occupation d'environ 17~\%. La répartition par constructeur d'interface réseau (adresse MAC) fait apparaître une majorité de postes Hewlett-Packard, accompagnés de quelques serveurs Windows, de téléphones IP Grandstream, d'imprimantes réseau Canon, et d'un nombre significatif d'adresses associées à des circuits intégrés Realtek, typiques de cartes réseau embarquées sur des équipements variés. \acompleter{tableau de synthèse : constructeur et nombre d'hôtes, à extraire de la sortie Nmap}
-
-Sur les sept ports testés, aucun service RTSP (port 554) n'a été détecté sur l'ensemble des hôtes actifs, ce qui n'indique pas de présence de caméras de vidéosurveillance IP exposant un flux vidéo direct sur ce segment particulier. Le tableau~\ref{tab:services} présente les services web identifiés.
-
-\begin{table}[htbp]
-\centering
-\small
-\begin{tabular}{llp{5.5cm}}
-\hline
-\textbf{Adresse IP} & \textbf{Service identifié} & \textbf{Nature de l'équipement} \\
-\hline
-10.60.4.1 & Pare-feu / routeur (Cisco) & Passerelle réseau \\
-10.60.4.109 & Interface « GWN Project » (Grandstream) & Contrôleur de point d'accès Wi-Fi \\
-10.60.4.210 & IIS 10.0 / Windows & Serveur applicatif \\
-10.60.5.21 & Virata-EmWeb (HP) & Serveur web embarqué, probable imprimante ou onduleur \\
-10.60.5.100 & IIS 10.0 / Windows, erreur HTTP 403 & Équipement non identifié \\
-10.60.5.177 & Interface Canon confirmée & Imprimante réseau \\
-\hline
-\end{tabular}
-\caption{Services web identifiés sur le segment audité}
-\label{tab:services}
-\end{table}
-
-L'hôte 10.60.5.100 a fait l'objet d'une vérification complémentaire par simple interrogation HTTP, sans tentative de contournement de l'authentification. La réponse obtenue (erreur 403, page générique IIS protégée par authentification Windows) n'a pas permis de confirmer la nature exacte de l'équipement, malgré l'hypothèse initiale d'un enregistreur vidéo suggérée par le constructeur associé à son adresse MAC. Une identification complémentaire auprès du service informatique serait nécessaire.
+Les résultats d'un premier audit réalisé pendant le stage ne sont pas repris dans ce mémoire : un nouvel audit réseau doit être conduit ultérieurement, selon la méthode ci-dessus, pour établir un état des lieux à jour. Aucun résultat, aucune adresse IP, aucun port détecté ni aucune interprétation n'est donc présenté par anticipation : les constats, le tableau de synthèse par constructeur d'équipement et la liste des services exposés seront rédigés exclusivement à partir des sorties effectivement recueillies. \acompleter{date et périmètre exacts du nouvel audit, à fixer avec le tuteur ; tableau de synthèse des constructeurs et nombre d'hôtes, à extraire des futures sorties Nmap}
 
 \subsection{Architecture physique du réseau}
 
@@ -96,25 +73,21 @@ Le service a fourni un schéma de l'architecture du réseau du CNHU-HKM\cite{arc
 Quatre enseignements se dégagent pour ce travail.
 \begin{itemize}
 \item \textbf{Un point de convergence unique.} Le trafic entre services transite par le switch fédérateur et le routeur. C'est un emplacement d'observation idéal : un port miroir sur le fédérateur donne à une sonde passive la vue sur l'essentiel des flux, sans effet sur le trafic. C'est aussi un point de défaillance unique, ce qui pèse sur le choix d'un mode en coupure.
-\item \textbf{Aucun pare-feu, VLAN ni adressage n'apparaît sur le schéma.} Cela rejoint les constats de l'audit, mais reste à confirmer auprès du service : l'audit a identifié 10.60.4.1 comme un équipement Cisco de passerelle.
+\item \textbf{Aucun pare-feu, VLAN ni adressage n'apparaît sur le schéma.} Cette absence de représentation ne préjuge pas de l'existence de ces éléments : le nouvel audit et les échanges avec le service devront lever cette ambiguïté.
 \item \textbf{Un parc de switches hétérogène et en renouvellement.} Les capacités (port miroir, VLAN, contrôle ARP) dépendent du modèle, ce qui conditionne la faisabilité de la sonde et de la segmentation. \acompleter{modèle exact du switch fédérateur Dell et prise en charge du port miroir}
 \item \textbf{Une limite de visibilité.} Le trafic entre deux postes d'un même switch d'accès ne traverse pas le cœur et échappe à une sonde placée à cet endroit.
 \end{itemize}
-Le schéma est par ailleurs probablement antérieur à l'audit : il ne montre que deux points d'accès Wi-Fi, alors que l'audit a identifié un contrôleur Wi-Fi. Il doit donc être validé par le service avant d'être exploité comme référence.
+La date exacte du schéma restant à préciser, il doit être validé par le service avant d'être exploité comme référence ; le nouvel audit permettra notamment de vérifier le nombre et le positionnement des points d'accès Wi-Fi.
 
 \subsection{Inventaire, flux et usages}
 
-\acompleter{inventaire détaillé par zone fonctionnelle, type d'équipement et criticité estimée, en croisant le scan avec la documentation interne et les échanges avec le personnel technique}
+\acompleter{inventaire détaillé par zone fonctionnelle, type d'équipement et criticité estimée, à établir après le nouvel audit en croisant ses sorties avec la documentation interne et les échanges avec le personnel technique}
 
 \acompleter{flux métiers connus du service informatique (accès au SIH, à l'imagerie, à la messagerie), décrits à partir des échanges avec le personnel, même sans capture de trafic}
 
-\subsection{Constats}
-
-L'audit fait ressortir trois constats principaux. Premièrement, l'absence de segmentation visible sur le segment analysé : postes de travail, téléphonie IP, serveurs applicatifs et imprimantes partagent la même plage d'adressage /23, sans séparation par VLAN détectable depuis une position d'observation standard du réseau. Ce constat décrit l'état observé sur ce segment à la date de l'audit ; il ne préjuge pas de l'avancement des travaux de segmentation par VLAN que l'UGRIM mène par ailleurs\cite{kaho2026} \acompleter{faire préciser au tuteur leur périmètre et leur état, et ajuster ce constat}. Deuxièmement, l'absence de flux RTSP exposé sur ce segment, ce qui suggère soit l'absence de vidéosurveillance IP sur cette plage, soit son isolement sur un réseau distinct non couvert par ce balayage. Des installations de caméras de surveillance ayant été réalisées par l'unité durant l'été 2026\cite{kaho2026}, la seconde hypothèse est plausible ; elle reste à confirmer auprès du service compétent. Troisièmement, la présence d'un équipement non identifié (10.60.5.100), dont la fonction exacte n'a pas pu être déterminée par la seule observation du service web exposé.
-
 \section{Analyse de risques simplifiée}
 
-L'analyse s'inspire d'une version simplifiée de la méthode EBIOS Risk Manager : identification des biens essentiels, des scénarios redoutés, puis cotation de la vraisemblance et de la gravité sur une échelle de 1 (faible) à 4 (critique). Le tableau~\ref{tab:risques} présente les scénarios déduits des constats de l'audit. Les cotations sont une proposition de l'auteur, \acompleter{à valider avec le tuteur}.
+L'analyse s'inspire d'une version simplifiée de la méthode EBIOS Risk Manager : identification des biens essentiels, des scénarios redoutés, puis cotation de la vraisemblance et de la gravité sur une échelle de 1 (faible) à 4 (critique). Le tableau~\ref{tab:risques} présente des scénarios de risque anticipés à partir des menaces documentées au chapitre~\ref{chap:1} et de l'architecture schématisée plus haut ; ils devront être confirmés ou ajustés à la lumière du nouvel audit. Les cotations sont une proposition de l'auteur, \acompleter{à valider avec le tuteur}.
 
 \begin{table}[htbp]
 \centering
@@ -124,7 +97,7 @@ L'analyse s'inspire d'une version simplifiée de la méthode EBIOS Risk Manager 
 \textbf{Réf.} & \textbf{Scénario de risque} & \textbf{Vrais.} & \textbf{Gravité} & \textbf{Niveau} \\
 \hline
 R1 & Propagation d'un rançongiciel depuis un poste administratif vers les serveurs applicatifs, faute de segmentation & 3 & 4 & 12 \\
-R2 & Compromission d'un équipement biomédical ou d'un équipement non identifié, faute d'authentification robuste et d'isolement & 2 & 4 & 8 \\
+R2 & Compromission d'un équipement biomédical, faute d'authentification robuste et d'isolement & 2 & 4 & 8 \\
 R3 & Intrusion non détectée, faute de supervision centralisée & 3 & 3 & 9 \\
 R4 & Accès d'un visiteur ou d'un équipement non maîtrisé au réseau interne & 2 & 3 & 6 \\
 \hline
@@ -175,7 +148,7 @@ OPNsense est retenu comme plateforme hôte pour son caractère open source, son 
 
 \subsection{Zones surveillées et plan d'adressage}
 
-Le système inspecte le trafic qui circule entre des zones fonctionnelles. À partir de la segmentation hospitalière décrite au chapitre~\ref{chap:1} et des constats de l'audit, cinq zones sont retenues, chacune portée par un VLAN. Le plan d'adressage ci-dessous est celui du laboratoire, distinct du plan de production (10.60.4.0/23). Le pare-feu en est la passerelle (adresse .1 de chaque réseau).
+Le système inspecte le trafic qui circule entre des zones fonctionnelles. À partir de la segmentation hospitalière décrite au chapitre~\ref{chap:1} et de l'architecture documentée, cinq zones sont retenues, chacune portée par un VLAN ; leur calage définitif sur les réseaux réels interviendra après le nouvel audit. Le plan d'adressage ci-dessous est celui du laboratoire, distinct du plan d'adressage de production, qui sera documenté à l'issue du nouvel audit. Le pare-feu en est la passerelle (adresse .1 de chaque réseau).
 
 \begin{table}[htbp]
 \centering
@@ -259,4 +232,4 @@ La segmentation par zones et la supervision par Wazuh complètent le système sa
 \addcontentsline{toc}{section}{Conclusion}
 \section*{Conclusion}
 
-L'audit confirme la pertinence de la problématique : l'absence de segmentation expose le parc à une propagation rapide en cas de compromission d'un seul équipement, et aucun mécanisme de détection d'intrusion n'a été identifié. Ces constats fondent le système proposé : Suricata, placé sur OPNsense, inspectant les flux entre cinq zones, d'abord en IDS puis en IPS. Le chapitre suivant décrit le protocole de déploiement en laboratoire et la méthode d'évaluation prévue, dont l'exécution reste à conduire.
+La problématique reste fondée sur les besoins exprimés par le service et sur les menaces hospitalières documentées au chapitre~\ref{chap:1} ; le nouvel audit prévu permettra de la confirmer par des mesures. En l'état, la proposition d'architecture repose sur Suricata, placé sur OPNsense, inspectant les flux entre cinq zones, d'abord en IDS puis en IPS. Le chapitre suivant décrit le protocole de déploiement en laboratoire et la méthode d'évaluation prévue, dont l'exécution reste à conduire.

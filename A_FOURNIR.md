@@ -1,12 +1,15 @@
 # Informations à fournir pour finaliser le mémoire
 
-Inventaire au 28 octobre 2026 (après figement du chapitre 3 en protocole).
+Inventaire au 28 octobre 2026 (après figement du chapitre 3 en protocole et
+retrait des résultats de l'ancien audit Nmap).
 État des marqueurs dans les sources :
-**57 `\acompleter`, 35 `\amesurer`, 10 blocs `\preuves`**. Aucune valeur ci-dessous
+**56 `\acompleter`, 35 `\amesurer`, 10 blocs `\preuves`**. Aucune valeur ci-dessous
 ne peut être inventée : chaque entrée doit correspondre à un document, une
 mesure ou une information réellement obtenus.
 
-**Fait acté : le laboratoire n'a pas été monté et aucun test n'a été exécuté.**
+**Faits actés : le laboratoire n'a pas été monté et aucun test n'a été exécuté ;
+les résultats de l'ancien audit Nmap ont été retirés du mémoire et un nouvel
+audit est programmé (méthode décrite au chapitre 2, sans résultat anticipé).**
 Le chapitre 3 est donc un protocole expérimental complet et reproductible :
 les 35 cellules « à mesurer » ne seront remplies que si le protocole est joué
 avant le dépôt. Si tel n'est pas le cas, elles doivent rester telles quelles :
@@ -37,8 +40,8 @@ chapitre 3 complet · P2 = qualité/harmonisation.
 
 | # | Information | Fichier / emplacement |
 |---|---|---|
-| B1 | Sorties Nmap brutes (`nmap -sn`, `nmap -sV` sur les 7 ports) | annexe E |
-| B2 | Tableau de synthèse constructeur / nombre d'hôtes (extrait du scan) | `2-partie/1-fichier.tex` |
+| B1 | Sorties Nmap brutes du **nouvel audit** (`nmap -sn`, `nmap -sV` sur les 7 ports) | annexe E |
+| B2 | Date et périmètre du nouvel audit ; tableau de synthèse constructeur / nombre d'hôtes (extrait des futures sorties) | `2-partie/1-fichier.tex` |
 | B3 | Modèle exact du switch fédérateur Dell et support du port miroir | `2-partie/1-fichier.tex` |
 | B4 | État et périmètre des travaux de segmentation par VLAN en cours | `2-partie/1-fichier.tex` |
 | B5 | État actuel de la fusion CNHU-HKM / HIA de Cotonou | `1-partie/1-fichier.tex` |
@@ -85,7 +88,7 @@ chapitre 3 sont rédigés et indiquent explicitement que l'évaluation n'a pas
 
 1. **A1–A10** : débloquables immédiatement par vos soins (1 jour).
 2. **B1–B12** : à partir des archives de stage et d'un entretien tuteur (1 jour).
-3. **C1–C15** : exécuter le protocole du chapitre 3 et collecter les preuves ;
+3. **C1–C14** : exécuter le protocole du chapitre 3 et collecter les preuves ;
    c'est le seul lot qui dépend de manipulations réelles.
 4. Après livraison de chaque lot, les marqueurs correspondants sont remplacés
    par les valeurs réelles et supprimés ; le compteur de marqueurs doit tomber
