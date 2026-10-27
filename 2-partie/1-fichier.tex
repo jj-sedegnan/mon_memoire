@@ -7,7 +7,7 @@ Ce chapitre décrit la démarche suivie, présente les résultats de l'audit du 
 
 \subsection{Étapes du projet}
 
-Le projet s'est déroulé en cinq phases successives, étalées sur \acompleter{X} semaines : un audit du réseau existant, une phase de conception de l'architecture cible, une phase de réalisation en environnement de test virtualisé, une phase d'évaluation expérimentale par des scénarios d'attaque, et une phase de synthèse donnant lieu à des recommandations pour un déploiement progressif au CNHU-HKM. Le tableau~\ref{tab:calendrier} fixe le calendrier prévisionnel de ces phases ; les dates et durées effectives doivent être reportées depuis le journal de bord, aucune durée n'étant indiquée tant qu'elle n'est pas attestée.
+Le projet s'organise en cinq phases successives, étalées sur \acompleter{X} semaines : un audit du réseau existant, une phase de conception de l'architecture cible, une phase de réalisation en environnement de test virtualisé, une phase d'évaluation expérimentale par des scénarios d'attaque, et une phase de synthèse donnant lieu à des recommandations pour un déploiement progressif au CNHU-HKM. Les deux premières phases sont réalisées et documentées dans ce mémoire. Les phases 3 et 4 n'ont pas été exécutées : elles font l'objet, au chapitre~\ref{chap:3}, d'un protocole entièrement spécifié et prêt à mettre en œuvre. Le tableau~\ref{tab:calendrier} fixe le calendrier prévisionnel de ces phases ; les dates et durées effectives doivent être reportées depuis le journal de bord, aucune durée n'étant indiquée tant qu'elle n'est pas attestée.
 
 \begin{table}[htbp]
 \centering
@@ -259,4 +259,4 @@ La segmentation par zones et la supervision par Wazuh complètent le système sa
 \addcontentsline{toc}{section}{Conclusion}
 \section*{Conclusion}
 
-L'audit confirme la pertinence de la problématique : l'absence de segmentation expose le parc à une propagation rapide en cas de compromission d'un seul équipement, et aucun mécanisme de détection d'intrusion n'a été identifié. Ces constats fondent le système proposé : Suricata, déployé sur OPNsense, inspectant les flux entre cinq zones, d'abord en IDS puis en IPS. Le chapitre suivant décrit son déploiement en laboratoire et son évaluation.
+L'audit confirme la pertinence de la problématique : l'absence de segmentation expose le parc à une propagation rapide en cas de compromission d'un seul équipement, et aucun mécanisme de détection d'intrusion n'a été identifié. Ces constats fondent le système proposé : Suricata, placé sur OPNsense, inspectant les flux entre cinq zones, d'abord en IDS puis en IPS. Le chapitre suivant décrit le protocole de déploiement en laboratoire et la méthode d'évaluation prévue, dont l'exécution reste à conduire.

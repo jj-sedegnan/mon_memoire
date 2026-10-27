@@ -1,7 +1,7 @@
 \addcontentsline{toc}{section}{Introduction}
 \section*{Introduction}
 
-Ce chapitre décrit le déploiement de Suricata sur la plateforme OPNsense dans un environnement virtualisé, la rédaction de règles adaptées au contexte hospitalier, puis l'évaluation du système par des scénarios d'attaque rejoués avant et après sa mise en œuvre. Les étapes de déploiement présentées constituent la procédure cible : elles ne valent pas constat d'exécution, laquelle doit être établie par les preuves listées dans chaque section. Conformément à la règle suivie tout au long de ce travail, aucun résultat n'est présenté tant qu'il n'a pas été mesuré : les passages marqués en rouge sont à compléter avec les résultats réels, et chaque section indique les preuves à produire.
+Ce chapitre décrit la procédure cible de déploiement de Suricata sur la plateforme OPNsense dans un environnement virtualisé, la rédaction de règles adaptées au contexte hospitalier, puis le protocole d'évaluation par des scénarios d'attaque rejouables avant et après mise en œuvre. L'environnement de test n'ayant pas été réalisé dans le cadre de ce mémoire, ce chapitre est un protocole expérimental proposé : aucune étape n'y est présentée comme exécutée, et aucune mesure n'est donnée. Chaque section indique les commandes à lancer, les résultats attendus et les preuves à recueillir lors de l'exécution future ; les passages marqués en rouge correspondent aux valeurs qui ne peuvent être remplies que par des mesures réelles.
 
 \section{Environnement de virtualisation}
 
@@ -30,7 +30,7 @@ Poste Kali & machine d'attaque (tests) & \acompleter{vCPU / RAM} \\
 
 \subsection{Installation et vérification}
 
-La virtualisation matérielle est vérifiée par la commande \texttt{egrep -c '(vmx|svm)' /proc/cpuinfo}, qui doit renvoyer une valeur non nulle ; les machines créées sont listées par \texttt{virsh list --all}. Un pont réseau relie l'hôte au réseau physique du laboratoire.
+La virtualisation matérielle sera vérifiée par la commande \texttt{egrep -c '(vmx|svm)' /proc/cpuinfo}, qui doit renvoyer une valeur non nulle ; les machines créées seront listées par \texttt{virsh list --all}. Un pont réseau reliera l'hôte au réseau physique du laboratoire.
 
 \preuves{résultat de \texttt{egrep -c '(vmx|svm)' /proc/cpuinfo} ; capture de \texttt{virsh list --all} ; schéma de la topologie ; configuration du pont réseau de l'hôte.}
 
@@ -152,7 +152,7 @@ Wazuh est retenu en configuration tout-en-un pour centraliser et visualiser les 
 
 \section{Scénarios de test et protocole}
 
-Sept scénarios, rattachés au référentiel MITRE ATT\&CK\cite{attck}, sont proposés (tableau~\ref{tab:scenarios}). Ils couvrent la reconnaissance, l'accès initial et le mouvement latéral. Chacun est rejoué à l'identique dans les trois états, exclusivement dans le laboratoire.
+Sept scénarios, rattachés au référentiel MITRE ATT\&CK\cite{attck}, sont proposés (tableau~\ref{tab:scenarios}). Ils couvrent la reconnaissance, l'accès initial et le mouvement latéral. Chacun devra être rejoué à l'identique dans les trois états, exclusivement dans le laboratoire.
 
 \begin{table}[htbp]
 \centering
@@ -174,11 +174,11 @@ S7 & -- & accès DICOM depuis une zone non autorisée (flux métier interdit) & 
 \label{tab:scenarios}
 \end{table}
 
-Trois états sont comparés, avec la même topologie et les mêmes règles de pare-feu : (A) l'état « avant », sans détection ; (B) Suricata en mode IDS ; (C) Suricata en mode IPS. Seul le fonctionnement de Suricata varie. Les indicateurs mesurés sont : attaque réussie ou non, alerte générée oui ou non, blocage oui ou non, délai de détection en secondes (horodatage de l'alerte moins horodatage du début du test), nombre de faux positifs et impact sur la latence. Le taux de détection est le nombre de scénarios détectés divisé par le nombre de scénarios joués ; le taux de blocage se calcule de la même façon.
+Trois états seront comparés, avec la même topologie et les mêmes règles de pare-feu : (A) l'état « avant », sans détection ; (B) Suricata en mode IDS ; (C) Suricata en mode IPS. Seul le fonctionnement de Suricata variera. Les indicateurs à mesurer sont : attaque réussie ou non, alerte générée oui ou non, blocage oui ou non, délai de détection en secondes (horodatage de l'alerte moins horodatage du début du test), nombre de faux positifs et impact sur la latence. Le taux de détection sera le nombre de scénarios détectés divisé par le nombre de scénarios joués ; le taux de blocage se calculera de la même façon.
 
-\section{Résultats de l'évaluation avant/après}
+\section{Protocole de mesure et grille de résultats prévue}
 
-Le tableau~\ref{tab:resultats} reste à renseigner avec les mesures réelles ; aucune valeur n'est à y inscrire avant les tests.
+L'évaluation n'ayant pas été exécutée, le tableau~\ref{tab:resultats} est une grille de mesures prévues, pas un tableau de résultats : chaque cellule reste marquée « à mesurer » et ne pourra être remplie qu'à partir des sorties collectées selon le protocole ci-dessous. Pour chaque scénario, la procédure est identique dans les trois états : horodater le début du test, lancer la commande prévue au tableau~\ref{tab:scenarios}, conserver la sortie complète, relever la présence ou l'absence d'alerte dans \texttt{eve.json} (états B et C) et, pour l'état C, la preuve du blocage. Le délai de détection se calcule par différence entre l'horodatage de l'alerte et celui du début du test.
 
 \begin{table}[htbp]
 \centering
@@ -197,21 +197,32 @@ S6 & \amesurer & \amesurer & \amesurer & \amesurer & \amesurer \\
 S7 & \amesurer & \amesurer & \amesurer & \amesurer & \amesurer \\
 \hline
 \end{tabular}
-\caption{Résultats de l'évaluation : sans détection, IDS et IPS}
+\caption{Grille de mesures prévues pour l'évaluation : sans détection, IDS et IPS (à renseigner après exécution du protocole)}
 \label{tab:resultats}
 \end{table}
 
 \preuves{pour chaque scénario et chaque état : commande lancée, sortie, présence ou absence d'alerte ; pour les états IDS et IPS, capture de l'alerte avec son horodatage ; nombre de faux positifs relevés ; mesure de latence avec et sans IPS.}
 
-\subsection{Interprétation et limites}
+\subsection{Cadre d'interprétation des mesures et limites}
 
-\acompleter{pour chaque indicateur, une ou deux phrases sur ce que le résultat démontre par rapport à l'objectif : détecter et bloquer les attaques en préservant la disponibilité}
+Les règles de lecture des indicateurs sont fixées à l'avance, pour éviter toute interprétation a posteriori des mesures. Un scénario est réputé \emph{détecté} dans un état donné si une alerte correspondant à l'attaque est journalisée dans \texttt{eve.json} pendant la fenêtre du test ; il est réputé \emph{bloqué} dans l'état C si la connexion échoue et si un événement de blocage est journalisé. La colonne « Alerte » de l'état A doit normalement rester vide : toute alerte dans cet état témoignerait d'une détection indépendante de Suricata qu'il conviendrait d'expliquer. Le taux de détection s'établit comme le rapport du nombre de scénarios détectés sur le nombre de scénarios joués, et le taux de blocage de la même manière en état C. Les délais se comparent entre scénarios exécutés dans des conditions identiques ; les faux positifs, comptés sur le trafic normal, déterminent quelles règles sont éligibles à l'action \texttt{drop}. Les hypothèses H1 à H3 de l'introduction générale ne pourront être tenues pour vérifiées que si les mesures recueillies les confirment effectivement ; en l'absence d'exécution, aucune ne l'est dans ce mémoire.
 
-Les mesures de délai doivent être interprétées avec prudence : réalisées sur un environnement virtualisé aux cœurs partagés, elles ne reflètent pas nécessairement les performances de l'infrastructure de production du CNHU-HKM, dimensionnée différemment (voir la section~\ref{sec:limites}). Les résultats portent par ailleurs sur sept scénarios et sur la détection par signatures ; ils ne couvrent ni le trafic chiffré ni les menaces inédites.
+Les mesures de délai devront être interprétées avec prudence : réalisées sur un environnement virtualisé aux cœurs partagés, elles ne refléteront pas nécessairement les performances de l'infrastructure de production du CNHU-HKM, dimensionnée différemment (voir la section~\ref{sec:limites}). Les résultats porteront par ailleurs sur sept scénarios et sur la détection par signatures ; ils ne couvriront ni le trafic chiffré ni les menaces inédites.
 
-\section{Difficultés rencontrées}
+\section{Difficultés anticipées et mesures de mitigation}
 
-\acompleter{pour chaque difficulté du journal de bord : nature (message d'erreur exact), cause, solution retenue, temps perdu ; classer par composant (virtualisation, OPNsense, Suricata, Wazuh)}
+Aucune difficulté d'exécution ne peut être relatée puisque le laboratoire n'a pas été mis en œuvre. Les points de vigilance identifiés dès la conception, et les mesures prévues pour y faire face, sont les suivants ; le journal de bord des manipulations futures complétera cette section avec les messages d'erreur exacts et les solutions effectivement retenues.
+
+\begin{itemize}
+\item \textbf{Variables d'adresses manquantes ou incohérentes.} Une variable non déclarée fait échouer le chargement des règles. La mitigation est l'exécution systématique de \texttt{suricata -T} après toute modification, avant tout rejeu de scénario.
+\item \textbf{Faux positifs de la règle R2 (SMB).} Les partages de fichiers et l'annuaire Active Directory peuvent générer des alertes légitimes. La mitigation est la période d'observation en IDS et la restriction de la règle aux seules sources non autorisées, avant tout passage en \texttt{drop}.
+\item \textbf{Compatibilité du mode inline (IPS).} Le blocage dépend du mécanisme de capture supporté par la carte et l'hyperviseur. La mitigation est une vérification préalable sur une règle de test, avec repli possible sur une sonde passive en port miroir, qui préserve la disponibilité du trafic.
+\item \textbf{Déclenchement intempestif de la règle R5.} Un hôte légitime très connectif peut atteindre le seuil de 20 segments SYN en cinq secondes. Les seuils seront calibrés à partir du trafic normal et complétés par les règles de balayage du jeu ET Open.
+\item \textbf{Visibilité sur le trafic chiffré.} Ni DICOM ni HL7 sur TLS ne sont inspectés par les règles proposées. Cette limite est assumée ; une éventuelle terminaison TLS relèverait d'un choix d'architecture du pare-feu, à traiter hors de ce protocole.
+\item \textbf{Synchronisation horaire.} Le calcul du délai de détection repose sur la différence de deux horodatages. Toutes les machines virtuelles devront être synchronisées par NTP avant les mesures, faute de quoi les délais constatés ne seraient pas exploitables.
+\end{itemize}
+
+\preuves{journal de bord des manipulations futures, classé par composant (virtualisation, OPNsense, Suricata, Wazuh), avec pour chaque incident le message d'erreur exact, sa cause, la solution retenue et le temps passé.}
 
 \section{Recommandations pour un déploiement au CNHU-HKM}
 
@@ -230,4 +241,4 @@ Les besoins en matériel et en temps sont \acompleter{à estimer avec le service
 \addcontentsline{toc}{section}{Conclusion}
 \section*{Conclusion}
 
-Ce chapitre a décrit le déploiement de Suricata en modes IDS puis IPS sur OPNsense, les règles adaptées au contexte hospitalier, le protocole d'évaluation et les recommandations de déploiement. \acompleter{une phrase sur les résultats obtenus, à rédiger après les mesures}
+Ce chapitre a spécifié de manière complète et reproductible le déploiement cible de Suricata en modes IDS puis IPS sur OPNsense, le jeu de cinq règles locales et leurs variables, les sept scénarios de test, les trois états de comparaison, les commandes de contrôle et les preuves à recueillir. L'expérimentation n'ayant pas été exécutée dans le cadre de ce mémoire, aucun résultat n'y est présenté : la grille de mesures est prête à l'emploi, et son exécution selon ce protocole fournira les valeurs destinées à remplir le tableau~\ref{tab:resultats}, puis à compléter les résumés et la conclusion générale.

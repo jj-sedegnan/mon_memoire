@@ -71,6 +71,35 @@ xelatex -interaction=nonstopmode main.tex
 xelatex -interaction=nonstopmode main.tex
 ```
 
+## Erreurs et avertissements à vérifier dans le journal (projet spécifique)
+
+Points propres à ce dépôt, à contrôler sur la première compilation :
+
+1. **PSTricks** : `ifri.cls` charge `pstricks`. Sous XeLaTeX, aucun message
+   `! Undefined control sequence` lié à PSTricks ne doit apparaître. Si vous
+   compiliez par erreur en pdfLaTeX, une erreur sur les fichiers `.pro` ou
+   `pstricks` apparaîtrait : basculer le moteur sur XeLaTeX, ne pas modifier
+   la classe.
+2. **Glossaire** : un avertissement `No \printglossary` ou une liste
+   d'acronymes vide signifie que `makeglossaries` n'a pas été lancé. Sur
+   Overleaf, recompiler ; en local, la chaîne `latexmk -xelatex` le gère.
+3. **Sommaire titletoc** : la première passe peut afficher des numéros de
+   page provisoires ; ils se corrigent à la deuxième compilation.
+4. **Citations** : toute occurrence de `Citation ... undefined` ou d'un point
+   d'interrogation en exposant signale une clé absente de `biblio.bib` (le
+   contrôle statique actuel indique 31 clés, toutes citées).
+5. **Références croisées** : aucune `Reference ... undefined` ne doit
+   subsister après deux passes (22 labels, tous référencés).
+6. **Listings** : les règles Suricata contiennent des `$` et `_` : ils
+   s'affichent en caractère machine dans le bloc gris et ne doivent pas
+   déclencher de mode mathématique.
+7. **`\vspace*{-6cm}` dans le résumé** : vérifier visuellement que le
+   résumé ne remonte pas trop haut sous l'en-tête ; ajuster cette valeur
+   seulement si la mise en page l'exige.
+8. **Paquets anciens** (`minitoc`, `SIunits`, `nomencl`) : des avertissements
+   de compatibilité peuvent s'afficher sans interrompre la compilation ; ne
+   les traiter que s'ils deviennent des erreurs.
+
 ## Vérifications obligatoires avant le dépôt
 
 1. Aucun marqueur rouge ne doit subsister :

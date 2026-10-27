@@ -1,9 +1,17 @@
 # Informations à fournir pour finaliser le mémoire
 
-Inventaire au 28 octobre 2026. État des marqueurs dans les sources :
-**63 `\acompleter`, 35 `\amesurer`, 9 blocs `\preuves`**. Aucune valeur ci-dessous
+Inventaire au 28 octobre 2026 (après figement du chapitre 3 en protocole).
+État des marqueurs dans les sources :
+**57 `\acompleter`, 35 `\amesurer`, 10 blocs `\preuves`**. Aucune valeur ci-dessous
 ne peut être inventée : chaque entrée doit correspondre à un document, une
 mesure ou une information réellement obtenus.
+
+**Fait acté : le laboratoire n'a pas été monté et aucun test n'a été exécuté.**
+Le chapitre 3 est donc un protocole expérimental complet et reproductible :
+les 35 cellules « à mesurer » ne seront remplies que si le protocole est joué
+avant le dépôt. Si tel n'est pas le cas, elles doivent rester telles quelles :
+le mémoire est scientifiquement défendable en l'état, car il n'affirme aucune
+mesure.
 
 Légende des priorités : **P0 = bloquant pour le dépôt** · P1 = requis pour un
 chapitre 3 complet · P2 = qualité/harmonisation.
@@ -62,9 +70,14 @@ tableau de résultats doit conserver ses 35 mentions « à mesurer ».
 | C10 | Faux positifs avant/après réglage, règles désactivées et justification | § réglage IDS |
 | C11 | Mesure de latence/débit avant et après activation IPS | § passage en IPS |
 | C12 | Tableau de bord Wazuh : alerte Suricata visible, réponse active si utilisée | § Wazuh |
-| C13 | Difficultés rencontrées (message d'erreur exact, cause, solution, temps perdu) | § difficultés |
+| C13 | Journal des incidents d'exécution futurs (message d'erreur exact, cause, solution, temps perdu) — les difficultés *anticipées* et leurs mitigations sont déjà rédigées | § difficultés anticipées |
 | C14 | Estimation des moyens matériels et humains pour le déploiement | § recommandations |
-| C15 | Phrases de résultats mesurés (résumés FR/EN, conclusion, conclusion ch. 3) | `2-resume.tex`, `4-conclusion.tex`, ch. 3 |
+
+**Déjà traité sans donnée (ne plus fournir) :** le cadre d'interprétation des
+indicateurs, les difficultés anticipées et leurs mitigations, les phrases de
+statut des résumés FR/EN, de la conclusion générale et de la conclusion du
+chapitre 3 sont rédigés et indiquent explicitement que l'évaluation n'a pas
+été exécutée.
 
 ---
 
