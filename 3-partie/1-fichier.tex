@@ -140,7 +140,7 @@ Les commandes ci-dessous servent à vérifier la syntaxe et le chargement effect
 
 \section{Passage en mode IPS}
 
-Le mode IPS place Suricata en coupure sur le flux. Il repose sur la compatibilité de la carte réseau virtuelle avec le mécanisme de capture utilisé, ce qui doit être vérifié sur l'environnement de test avant la bascule. Seules les règles à haute confiance, validées pendant la phase IDS, passent à l'action \texttt{drop}. La charge ajoutée par l'inspection en ligne est mesurée par la latence et le débit avant et après l'activation de l'IPS.
+Le mode IPS place Suricata en coupure sur le flux. Il repose sur la compatibilité de la carte réseau virtuelle avec le mécanisme de capture utilisé, ce qui doit être vérifié sur l'environnement de test avant la bascule. Seules les règles à haute confiance, validées pendant la phase IDS, passent à l'action \texttt{drop}. La charge ajoutée par l'inspection en ligne doit être mesurée par la latence et le débit avant et après l'activation de l'IPS, selon le protocole de la section consacrée aux résultats.
 
 \preuves{capture du blocage effectif d'une attaque en mode IPS, avec la ligne de journal ; mesure de latence ou de débit avant et après activation de l'IPS.}
 
